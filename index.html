@@ -651,6 +651,164 @@
   .delay-3 { animation-delay: 0.3s; }
   .delay-4 { animation-delay: 0.4s; }
 
+
+  /* ── WORK EXPERIENCE (highlight) ── */
+  #experience { background: var(--paper); }
+
+  .org-band {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 2rem;
+    background: var(--navy);
+    color: var(--paper);
+    padding: 2.4rem 2.6rem;
+    position: relative;
+    box-shadow: 18px 18px 0 var(--accent-light);
+    margin-bottom: 3.5rem;
+  }
+  .org-band::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 6px; background: var(--accent);
+  }
+  .org-kicker {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--accent-light); margin-bottom: 0.6rem;
+  }
+  .org-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 3.4vw, 3rem); font-weight: 400; line-height: 1.05;
+  }
+  .org-sub { font-size: 0.9rem; color: rgba(245,242,236,0.7); margin-top: 0.5rem; max-width: 60ch; }
+  .org-date {
+    font-family: 'DM Mono', monospace; font-size: 0.8rem; letter-spacing: 0.12em;
+    color: var(--paper); border: 1px solid rgba(245,242,236,0.3);
+    padding: 0.6rem 1rem; white-space: nowrap;
+  }
+
+  .role-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+  .role-card {
+    background: #fbf9f5;
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--navy);
+    padding: 2rem 2rem 1.8rem;
+    position: relative;
+    transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  }
+  .role-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 30px rgba(26,37,64,0.08);
+    border-top-color: var(--accent);
+  }
+  .role-card.current { border-top-color: var(--accent); }
+  .role-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.9rem; }
+  .role-num {
+    font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--accent); letter-spacing: 0.1em;
+  }
+  .role-badge {
+    font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--paper); background: var(--accent); padding: 0.25rem 0.55rem; white-space: nowrap;
+  }
+  .role-title {
+    font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 600;
+    color: var(--navy); line-height: 1.15; margin-bottom: 0.3rem;
+  }
+  .role-sub {
+    font-family: 'DM Mono', monospace; font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 1.1rem;
+  }
+  .role-list { list-style: none; display: grid; gap: 0.6rem; }
+  .role-list li {
+    position: relative; padding-left: 1.2rem;
+    font-size: 0.87rem; line-height: 1.65; color: #3d3830;
+  }
+  .role-list li::before {
+    content: ''; position: absolute; left: 0; top: 0.62rem;
+    width: 6px; height: 6px; background: var(--accent);
+  }
+
+  /* ── TEACHING (highlight) ── */
+  #teaching { background: var(--cream); }
+
+  .teach-card {
+    display: grid;
+    grid-template-columns: 0.9fr 1.3fr;
+    border: 1px solid var(--rule);
+    background: #fbf9f5;
+    box-shadow: 18px 18px 0 rgba(26,37,64,0.12);
+  }
+  .teach-left {
+    background: var(--accent);
+    color: var(--paper);
+    padding: 2.8rem 2.4rem;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 2rem;
+  }
+  .teach-code {
+    font-family: 'DM Mono', monospace; font-size: 0.72rem; letter-spacing: 0.2em;
+    background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.35);
+    padding: 0.35rem 0.7rem; display: inline-block; margin-bottom: 1.4rem;
+  }
+  .teach-course {
+    font-family: 'Cormorant Garamond', serif; font-size: clamp(1.9rem, 3vw, 2.6rem);
+    font-weight: 400; line-height: 1.1;
+  }
+  .teach-meta { display: grid; gap: 0.9rem; }
+  .teach-meta div { font-size: 0.88rem; line-height: 1.45; color: rgba(245,242,236,0.88); }
+  .teach-meta strong {
+    display: block; font-family: 'DM Mono', monospace; font-weight: 400;
+    font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(245,242,236,0.6);
+  }
+  .teach-right { padding: 2.8rem 2.6rem; }
+  .teach-role {
+    font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 600; color: var(--navy);
+  }
+  .teach-org { font-size: 0.9rem; color: var(--muted); font-style: italic; margin-bottom: 1.6rem; }
+  .teach-label {
+    font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--accent); margin: 1.6rem 0 0.8rem;
+  }
+  .topic-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .topic-chips span {
+    font-family: 'DM Mono', monospace; font-size: 0.64rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--navy); border: 1px solid var(--navy); padding: 0.35rem 0.7rem;
+  }
+  .teach-actions { margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+
+  /* ── RESEARCH EXPERIENCE sub-heading ── */
+  .sub-heading {
+    font-family: 'DM Mono', monospace; font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--accent); margin: 4.5rem 0 2rem; display: flex; align-items: center; gap: 0.8rem;
+  }
+  .sub-heading::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+  #research .timeline-item::before { border-color: var(--cream); }
+
+  .pub-group {
+    font-family: 'DM Mono', monospace; font-size: 0.66rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--accent-light); margin: 2.6rem 0 0.4rem;
+  }
+  .pub-group:first-child { margin-top: 0; }
+
+  /* ── SERVICE ── */
+  #service { background: var(--cream); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-up { animation: fadeUp 0.7s ease both; }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+
   /* ── RESPONSIVE ── */
   @media (max-width: 900px) {
     .hero { grid-template-columns: 1fr; min-height: auto; }
@@ -658,11 +816,19 @@
     .research-grid { grid-template-columns: 1fr; }
     .edu-grid { grid-template-columns: 1fr; }
     .contact-grid { grid-template-columns: 1fr; gap: 3rem; }
-    nav { padding: 1rem 1.5rem; }
-    .nav-links { gap: 1.5rem; }
-    section { padding: 4rem 1.5rem; }
-    .hero-left { padding: 3rem 1.5rem; }
+    nav { padding: 0.9rem 1rem; flex-wrap: wrap; gap: 0.6rem; }
+    .nav-links { gap: 0.4rem 1.1rem; flex-wrap: wrap; }
+    section { padding: 4rem 1rem; }
+    .hero { padding-top: 7rem; }
+    .hero-left { padding: 2rem 1rem; }
     .award-item { grid-template-columns: 1fr; gap: 0.5rem; }
+    .role-grid { grid-template-columns: 1fr; }
+    .org-band { grid-template-columns: 1fr; padding: 2rem 1.6rem; box-shadow: 8px 8px 0 var(--accent-light); }
+    .org-date { justify-self: start; }
+    .teach-card { grid-template-columns: 1fr; box-shadow: 8px 8px 0 rgba(26,37,64,0.12); }
+    .teach-left, .teach-right { padding: 2rem 1.6rem; }
+    .pub-item { grid-template-columns: 1fr; gap: 0.6rem; }
+    .pub-type { justify-self: start; }
   }
 </style>
 </head>
@@ -672,13 +838,13 @@
 <nav>
   <a class="nav-logo" href="#">M. I. Abedin</a>
   <ul class="nav-links">
-    <li><a href="#research">Research</a></li>
     <li><a href="#experience">Experience</a></li>
+    <li><a href="#teaching">Teaching</a></li>
+    <li><a href="#research">Research</a></li>
     <li><a href="#publications">Publications</a></li>
     <li><a href="#awards">Awards</a></li>
     <li><a href="photography.html">Photography</a></li>
     <li><a href="#contact">Contact</a></li>
-    
   </ul>
 </nav>
 
@@ -687,22 +853,25 @@
   <div class="hero-left">
     <div class="hero-eyebrow fade-up">IBM Master Inventor · Semiconductor Researcher</div>
     <h1 class="hero-name fade-up delay-1">Minhaz<br><em>Ibna Abedin</em></h1>
-    <p class="hero-title fade-up delay-2">Ph.D. · Technology Architect, IBM Research</p>
+    <p class="hero-title fade-up delay-2">AI Accelerator Hardware Architect, IBM Research · Instructor, UC Santa Cruz Silicon Valley Extension</p>
     <p class="hero-bio fade-up delay-3">
-      Defining the manufacturing blueprint for next-generation 2nm nanosheet technology. 
-      My work spans semiconductor devices, advanced packaging, AI hardware acceleration, 
-      and manufacturable qubit devices — bridging material science with system-level impact.
+      Semiconductor researcher working from advanced transistor technology to chiplet-based system
+      integration for AI hardware accelerators. Previously a technology architect on Gate-All-Around
+      nanosheet and next-generation Complementary FET (CFET) development; now a System Technology
+      Co-Optimization (STCO) engineer for AI accelerator hardware, while continuing research on
+      RRAM-based in-memory computing.
     </p>
     <div class="hero-tags fade-up delay-4">
-      <span class="tag">DTCO / STCO</span>
-      <span class="tag">RRAM & AI Hardware</span>
-      <span class="tag">Nanosheet Transistors</span>
+      <span class="tag">STCO / DTCO</span>
+      <span class="tag">AI Accelerator Hardware</span>
+      <span class="tag">Chiplet Integration</span>
+      <span class="tag">GAA Nanosheet &amp; CFET</span>
       <span class="tag">Advanced Packaging</span>
-      <span class="tag">Neuromorphic Computing</span>
+      <span class="tag">RRAM In-Memory Computing</span>
     </div>
     <div class="hero-actions fade-up delay-4">
-      <a href="#publications" class="btn-primary">View Publications</a>
-      <a href="#contact" class="btn-ghost">Get in Touch</a>
+      <a href="#experience" class="btn-primary">Work Experience</a>
+      <a href="#teaching" class="btn-ghost">Teaching</a>
     </div>
   </div>
 
@@ -710,7 +879,6 @@
     <!-- Decorative SVG background -->
     <svg class="hero-visual" viewBox="0 0 600 700" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
       <rect width="600" height="700" fill="#ede9df"/>
-      <!-- Grid lines -->
       <line x1="0" y1="100" x2="600" y2="100" stroke="#d4cfc5" stroke-width="0.5"/>
       <line x1="0" y1="200" x2="600" y2="200" stroke="#d4cfc5" stroke-width="0.5"/>
       <line x1="0" y1="300" x2="600" y2="300" stroke="#d4cfc5" stroke-width="0.5"/>
@@ -722,71 +890,183 @@
       <line x1="300" y1="0" x2="300" y2="700" stroke="#d4cfc5" stroke-width="0.5"/>
       <line x1="400" y1="0" x2="400" y2="700" stroke="#d4cfc5" stroke-width="0.5"/>
       <line x1="500" y1="0" x2="500" y2="700" stroke="#d4cfc5" stroke-width="0.5"/>
-      <!-- Atom circles -->
       <circle cx="300" cy="350" r="120" stroke="#1a2540" stroke-width="1" opacity="0.15"/>
       <circle cx="300" cy="350" r="70" stroke="#c8401a" stroke-width="0.8" opacity="0.25"/>
       <circle cx="300" cy="350" r="8" fill="#c8401a" opacity="0.5"/>
-      <!-- Orbit ellipses -->
       <ellipse cx="300" cy="350" rx="160" ry="55" stroke="#1a2540" stroke-width="0.8" opacity="0.2" transform="rotate(30 300 350)"/>
       <ellipse cx="300" cy="350" rx="160" ry="55" stroke="#1a2540" stroke-width="0.8" opacity="0.2" transform="rotate(-30 300 350)"/>
       <ellipse cx="300" cy="350" rx="160" ry="55" stroke="#1a2540" stroke-width="0.8" opacity="0.2" transform="rotate(90 300 350)"/>
-      <!-- Electron dots -->
       <circle cx="300" cy="192" r="5" fill="#c8401a" opacity="0.7"/>
       <circle cx="438" cy="392" r="5" fill="#c8401a" opacity="0.7"/>
       <circle cx="162" cy="392" r="5" fill="#c8401a" opacity="0.5"/>
-      <!-- Circuit lines -->
       <path d="M 80 150 h 40 v 40 h 80 v -40 h 40" stroke="#1a2540" stroke-width="0.8" opacity="0.18" fill="none"/>
       <path d="M 80 550 h 40 v -40 h 80 v 40 h 40" stroke="#1a2540" stroke-width="0.8" opacity="0.18" fill="none"/>
       <path d="M 380 150 h 40 v 40 h 80 v -40 h 40" stroke="#1a2540" stroke-width="0.8" opacity="0.18" fill="none"/>
-      <!-- Corner marks -->
-      <rect x="50" y="50" width="20" height="20" fill="none" stroke="#c8401a" stroke-width="1" opacity="0.4"/>
+      <rect x="120" y="60" width="20" height="20" fill="none" stroke="#c8401a" stroke-width="1" opacity="0.4"/>
       <rect x="530" y="630" width="20" height="20" fill="none" stroke="#c8401a" stroke-width="1" opacity="0.4"/>
-      <!-- Label text -->
-      <text x="52" y="48" font-family="monospace" font-size="8" fill="#6b6458" opacity="0.5">2NM NODE</text>
+      <text x="122" y="56" font-family="monospace" font-size="8" fill="#6b6458" opacity="0.5">CHIPLET · STCO</text>
       <text x="440" y="680" font-family="monospace" font-size="8" fill="#6b6458" opacity="0.5">NANOSHEET FET</text>
     </svg>
 
-    <!-- Floating stats card -->
     <div class="hero-card fade-up delay-2">
-      <div class="hero-card-label">Research Profile</div>
+      <div class="hero-card-label">Profile</div>
       <div class="stat-grid">
         <div class="stat-item">
-          <div class="stat-num">20+</div>
-          <div class="stat-label">Patents Filed</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-num">10+</div>
-          <div class="stat-label">Publications</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-num">2nm</div>
-          <div class="stat-label">Node Focus</div>
+          <div class="stat-num">2022</div>
+          <div class="stat-label">Joined IBM Research</div>
         </div>
         <div class="stat-item">
           <div class="stat-num">2025</div>
           <div class="stat-label">Master Inventor</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">2nm</div>
+          <div class="stat-label">GAA Node DTCO</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">2026</div>
+          <div class="stat-label">UCSC Instructor</div>
         </div>
       </div>
       <hr class="stat-divider"/>
       <div class="affil">
         <div class="affil-dot"></div>
         <div class="affil-text">
-          <strong>IBM Research, Albany NY</strong>
-          DTCO / STCO Engineer
+          <strong>IBM Research, New York</strong>
+          AI Accelerator Hardware Architect / STCO Engineer
         </div>
       </div>
       <div class="affil">
         <div class="affil-dot"></div>
         <div class="affil-text">
-          <strong>University at Albany</strong>
-          Ph.D. Nanoscale Engineering
+          <strong>UC Santa Cruz Silicon Valley Extension</strong>
+          Instructor, 3D IC Packaging &amp; Physical Verification
         </div>
       </div>
       <div class="affil">
         <div class="affil-dot"></div>
         <div class="affil-text">
           <strong>IEEE EDS</strong>
-          Vice-Chair, Schenectady Chapter
+          Vice-Chair, Schenectady Section
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORK EXPERIENCE -->
+<section id="experience">
+  <div class="section-inner">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <h2 class="section-title">Work Experience</h2>
+      <div class="section-rule"></div>
+    </div>
+
+    <div class="org-band">
+      <div>
+        <div class="org-kicker">Industry Research</div>
+        <div class="org-name">IBM Research</div>
+        <p class="org-sub">Yorktown Heights, NY, USA · Advanced logic technology, AI accelerator hardware, advanced packaging and quantum hardware research</p>
+      </div>
+      <div class="org-date">2022 — Present</div>
+    </div>
+
+    <div class="role-grid">
+      <div class="role-card current">
+        <div class="role-head">
+          <span class="role-num">01</span>
+          <span class="role-badge">Current</span>
+        </div>
+        <h3 class="role-title">AI Accelerator Hardware Architect</h3>
+        <div class="role-sub">System Technology Co-Optimization (STCO) Engineer</div>
+        <ul class="role-list">
+          <li>Power, performance and area assessment of AI physical hardware for a target AI model.</li>
+          <li>Thermal, structural, power and signal integrity of the physical implementation of chiplet-based heterogeneous integration.</li>
+        </ul>
+      </div>
+
+      <div class="role-card">
+        <div class="role-head">
+          <span class="role-num">02</span>
+        </div>
+        <h3 class="role-title">Logic Technology Architect</h3>
+        <div class="role-sub">Design Technology Co-Optimization (DTCO) Engineer</div>
+        <ul class="role-list">
+          <li>Led design and technology co-optimization for manufacturing-focused gate-all-around nanosheet logic technology at the 2nm node.</li>
+          <li>Cross-functional evaluation of FEOL, BEOL and standard-cell trade-offs to balance performance, yield, reliability and area.</li>
+          <li>Supported product-level PPA optimization, logic cell design, place-and-route assessment and integration rule definition.</li>
+        </ul>
+      </div>
+
+      <div class="role-card">
+        <div class="role-head">
+          <span class="role-num">03</span>
+        </div>
+        <h3 class="role-title">Advanced Packaging Manufacturing Research</h3>
+        <div class="role-sub">Packaging Roadmap &amp; Integration</div>
+        <ul class="role-list">
+          <li>Defined IBM's roadmap for advanced packaging with scaling trends.</li>
+          <li>Evaluated packaging elements such as bump pitch, interconnect scaling, and package-level signal and power integrity.</li>
+          <li>Co-optimized packaging trade-offs across performance, area and manufacturability.</li>
+        </ul>
+      </div>
+
+      <div class="role-card">
+        <div class="role-head">
+          <span class="role-num">04</span>
+        </div>
+        <h3 class="role-title">Quantum Hardware Research</h3>
+        <div class="role-sub">Enabling Process Technologies</div>
+        <ul class="role-list">
+          <li>Supported hardware-focused evaluation and integration studies for process technologies that enable quantum systems.</li>
+          <li>Emerging hardware assessment in collaboration with device, integration and architecture teams.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TEACHING -->
+<section id="teaching">
+  <div class="section-inner">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <h2 class="section-title">Teaching Experience</h2>
+      <div class="section-rule"></div>
+    </div>
+
+    <div class="teach-card">
+      <div class="teach-left">
+        <div>
+          <span class="teach-code">VLSI.X418</span>
+          <div class="teach-course">3D IC Packaging &amp; Physical Verification</div>
+        </div>
+        <div class="teach-meta">
+          <div><strong>Institution</strong>University of California Santa Cruz, Silicon Valley Extension</div>
+          <div><strong>Location</strong>Santa Clara, California, USA</div>
+          <div><strong>Period</strong>2026 — Present</div>
+        </div>
+      </div>
+      <div class="teach-right">
+        <div class="teach-role">Instructor</div>
+        <div class="teach-org">UCSC Silicon Valley Extension · VLSI Engineering</div>
+        <ul class="role-list">
+          <li>Teach the history of semiconductor chip packaging, advanced packaging fundamentals, and the basics of 2.5D and 3D system packaging.</li>
+          <li>Lead hands-on sessions on 3D IC design considerations, including floorplanning, routing, and thermal, signal and power integrity using commercial EDA tools.</li>
+        </ul>
+        <div class="teach-label">Course Topics</div>
+        <div class="topic-chips">
+          <span>Packaging History</span>
+          <span>2.5D / 3D Integration</span>
+          <span>Floorplanning</span>
+          <span>Routing</span>
+          <span>Thermal Integrity</span>
+          <span>Signal &amp; Power Integrity</span>
+          <span>Commercial EDA Tools</span>
+        </div>
+        <div class="teach-actions">
+          <a href="https://www.ucsc-extension.edu/about/instructors/minhaz-abedin" target="_blank" rel="noopener" class="btn-primary">Instructor Profile ↗</a>
         </div>
       </div>
     </div>
@@ -797,35 +1077,35 @@
 <section id="research">
   <div class="section-inner">
     <div class="section-header">
-      <span class="section-num">01</span>
-      <h2 class="section-title">Research Interests</h2>
+      <span class="section-num">03</span>
+      <h2 class="section-title">Research</h2>
       <div class="section-rule"></div>
     </div>
     <div class="research-grid">
       <div class="research-card">
         <div class="rc-icon">⬡</div>
-        <h3 class="rc-title">Semiconductor Devices & Interconnects</h3>
-        <p class="rc-body">Defining next-generation nanosheet (GAA) transistor architectures at the 2nm node, co-optimizing process integration, lithography, and etch for optimal PPA in logic standard cells.</p>
+        <h3 class="rc-title">GAA Nanosheet &amp; CFET Technology</h3>
+        <p class="rc-body">Advanced semiconductor technology development and integration for gate-all-around nanosheet transistors at the 2nm node and next-generation Complementary FET architectures, including interconnect scaling.</p>
       </div>
       <div class="research-card">
         <div class="rc-icon">◈</div>
-        <h3 class="rc-title">RRAM for AI Hardware</h3>
-        <p class="rc-body">Developing CMOS-integrated TaOx and HfOx resistive RAM on 65nm platforms for energy-efficient neuromorphic and in-memory computing, benchmarked against neural network accuracy targets.</p>
+        <h3 class="rc-title">AI Accelerator Hardware &amp; Chiplets</h3>
+        <p class="rc-body">AI accelerator hardware benchmarking and chiplet-based heterogeneous integration, co-optimizing power, performance and area of physical hardware for target AI models.</p>
       </div>
       <div class="research-card">
-        <div class="rc-icon">⬡</div>
+        <div class="rc-icon">▣</div>
         <h3 class="rc-title">Advanced Packaging</h3>
-        <p class="rc-body">Heterogeneous integration and advanced packaging solutions — signal/power integrity, thermal management, and bump pitch scaling roadmaps for packaged semiconductor systems.</p>
+        <p class="rc-body">Signal, power, thermal and structural integrity of advanced packages, and bump-pitch and interconnect scaling roadmaps for packaged semiconductor systems.</p>
       </div>
       <div class="research-card">
         <div class="rc-icon">◎</div>
-        <h3 class="rc-title">Neuromorphic Computing</h3>
-        <p class="rc-body">Hardware-aware neural network training and inference on RRAM arrays, spanning spiking neural networks, error-correcting codes, and space-grade low-power AI applications.</p>
+        <h3 class="rc-title">RRAM &amp; In-Memory Computing</h3>
+        <p class="rc-body">CMOS-integrated TaOx and HfOx resistive RAM on 65nm technology for energy-efficient in-memory and neuromorphic computing, benchmarked at neural-network accuracy.</p>
       </div>
       <div class="research-card">
         <div class="rc-icon">◇</div>
-        <h3 class="rc-title">Qubit Device Fabrication</h3>
-        <p class="rc-body">Research into manufacturable qubit devices compatible with industry-scale 300mm wafer platforms, bridging quantum hardware fabrication with semiconductor process integration.</p>
+        <h3 class="rc-title">Quantum Hardware</h3>
+        <p class="rc-body">Hardware-focused evaluation and integration studies of process technologies that enable quantum systems.</p>
       </div>
       <div class="research-card">
         <div class="rc-icon">⬡</div>
@@ -833,41 +1113,38 @@
         <p class="rc-body">Polymer microfluidic integration with silicon photonic biosensors for cost-effective clinical diagnostics, including COVID-19 antibody detection platforms.</p>
       </div>
     </div>
-  </div>
-</section>
 
-<!-- EXPERIENCE -->
-<section id="experience">
-  <div class="section-inner">
-    <div class="section-header">
-      <span class="section-num">02</span>
-      <h2 class="section-title">Experience</h2>
-      <div class="section-rule"></div>
-    </div>
+    <div class="sub-heading">Research Experience</div>
     <div class="timeline">
       <div class="timeline-item">
-        <div class="tl-date">Oct 2022 — Present</div>
-        <div class="tl-title">DTCO / STCO Engineer</div>
-        <div class="tl-org">IBM Research · Albany, NY</div>
-        <p class="tl-desc">Technology architect defining the 2nm nanosheet manufacturing blueprint. Leading Power-Performance-Area optimization across logic nodes including next-generation Gate-All-Around transistors (IBM–Rapidus collaboration). Responsibilities span BEOL scaling, standard cell design (inverter, NAND, NOR), advanced packaging PPA, and product-level performance and yield evaluation.</p>
+        <div class="tl-date">2020 — 2022</div>
+        <div class="tl-title">Optimizing and Benchmarking RRAM Devices for AI Hardware</div>
+        <div class="tl-org">IBM, Yorktown Heights &amp; University at Albany · Advisors: Takashi Ando, Nanbo Gong (IBM), Dr. Nathaniel Cady</div>
+        <p class="tl-desc">Team developed CMOS-integrated TaOx and HfOx RRAM on the 65nm node. Electrically characterized devices from short (300ps) to long (10µs) pulses across pulse amplitudes, and analyzed switching behavior to benchmark neural-network accuracy with the IBM AIHWKit simulator.</p>
       </div>
       <div class="timeline-item">
-        <div class="tl-date">May 2020 — Sep 2022</div>
-        <div class="tl-title">Research Scientist — RRAM & AI Hardware</div>
-        <div class="tl-org">IBM (Yorktown Heights) & University at Albany</div>
-        <p class="tl-desc">Developed and characterized CMOS-integrated TaOx/HfOx RRAM devices for neuromorphic AI accelerators. Electrical characterization from 300ps to 10µs pulse widths; benchmarked device performance using the IBM AIHWKit simulator against neural network accuracy targets.</p>
+        <div class="tl-date">2020 — 2021</div>
+        <div class="tl-title">Predicting COVID-19 Infection with RRAM-enabled Neuromorphic Hardware</div>
+        <div class="tl-org">University at Albany · Advisors: Dr. James Plank (UT Knoxville), Dr. Nathaniel Cady</div>
+        <p class="tl-desc">Prepared multiplexed antibody biosensor data to train a small neural network; trained ANN and SNN models with 6-bit quantization and collected experimental inference data on an 8×8 CMOS-integrated RRAM array.</p>
       </div>
       <div class="timeline-item">
-        <div class="tl-date">Dec 2020 — Nov 2021</div>
-        <div class="tl-title">Research Lead — COVID-19 Neuromorphic Inference</div>
-        <div class="tl-org">University at Albany · College of Nanoscale Science and Engineering</div>
-        <p class="tl-desc">Led hardware inference demonstration for COVID-19 antibody detection using an 8×8 RRAM array. Trained ANN and SNN models with 6-bit quantization, validated against PCR ground truth datasets.</p>
+        <div class="tl-date">2020 — 2021</div>
+        <div class="tl-title">Peripheral Circuits for 65nm RRAM 1T1R Arrays for In-Memory Computation</div>
+        <div class="tl-org">University at Albany · Advisors: Yu Cao, Jae-sun Seo (ASU), Jaydeep Kulkarni (UT Austin), Dr. Nathaniel Cady</div>
+        <p class="tl-desc">Created Verilog models of fabricated multilevel RRAM devices with variation; designed the micro-architecture for 64×64 CMOS-integrated RRAM cells and peripheral circuits for single and multiple selection with level shifters and analog MUX.</p>
       </div>
       <div class="timeline-item">
-        <div class="tl-date">Jan 2018 — May 2020</div>
-        <div class="tl-title">Graduate Researcher — Microfluidics & Photonics</div>
-        <div class="tl-org">University at Albany · AIM Photonics</div>
-        <p class="tl-desc">Designed and characterized polymer microfluidic chips integrated with silicon photonic ring resonator biosensors for Lab-on-a-Chip clinical diagnostics, resulting in a featured HOT article in <em>Lab on a Chip</em> (2021).</p>
+        <div class="tl-date">2018 — 2020</div>
+        <div class="tl-title">Microfluidic Chips for Optical Ring Resonator Sensors</div>
+        <div class="tl-org">University at Albany · AIM Photonics · Advisors: Dr. Benjamin Miller (U. Rochester), Dr. Nathaniel Cady</div>
+        <p class="tl-desc">Developed polymer microfluidic chips and integrated them with silicon photonic biosensor chips for packaged Lab-on-a-Chip applications.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-date">2014 — 2015</div>
+        <div class="tl-title">Pixel Circuits for Wide Dynamic Range CMOS Image Sensors</div>
+        <div class="tl-org">Chittagong University of Engineering &amp; Technology · Advisor: Dr. Quazi Delwar Hossain</div>
+        <p class="tl-desc">Researched novel image-sensor pixel circuits using fewer transistors while achieving higher sensitivity.</p>
       </div>
     </div>
   </div>
@@ -877,65 +1154,126 @@
 <section id="publications">
   <div class="section-inner">
     <div class="section-header">
-      <span class="section-num">03</span>
-      <h2 class="section-title">Selected Publications</h2>
+      <span class="section-num">04</span>
+      <h2 class="section-title">Selected Publications &amp; Patents</h2>
       <div class="section-rule"></div>
     </div>
     <div class="pub-list">
+      <div class="pub-group">Patents</div>
+      <div class="pub-item">
+        <span class="pub-type">Patent</span>
+        <div>
+          <p class="pub-title">Epitaxial Region Contact Structure</p>
+          <p class="pub-venue"><em>US 2026/0059797</em> · Feb 2026 · M. Abedin, S. Khan, M. Hasanuzzaman, M. A. M. Rabie, R. Xie, O. Gluschenkov, U. Bajpai</p>
+        </div>
+      </div>
+      <div class="pub-item">
+        <span class="pub-type">Patent</span>
+        <div>
+          <p class="pub-title">Hybrid Dielectric Bar</p>
+          <p class="pub-venue"><em>US 2025/0380472</em> · Dec 2025 · M. Abedin, R. Xie, C. Zhang, O. Gluschenkov</p>
+        </div>
+      </div>
+      <div class="pub-item">
+        <span class="pub-type">Patent</span>
+        <div>
+          <p class="pub-title">Frontside-to-Backside Power Via Structure with Fork Sheet Transistor</p>
+          <p class="pub-venue"><em>US 2025/0372518</em> · Dec 2025 · M. Abedin, R. Xie, J. Zhang, K. Choi</p>
+        </div>
+      </div>
+      <div class="pub-item">
+        <span class="pub-type">Patent</span>
+        <div>
+          <p class="pub-title">Source/Drain Extension with Spacer Layers</p>
+          <p class="pub-venue"><em>US 2025/0204002</em> · Jun 2025 · M. Abedin, R. Xie, T. Li, J. Frougier, M. Hasanuzzaman</p>
+        </div>
+      </div>
+      <div class="pub-item">
+        <span class="pub-type">Patent</span>
+        <div>
+          <p class="pub-title">Backside Gate Contact and Backside Cross-Couple Connect</p>
+          <p class="pub-venue"><em>US 2025/0194153</em> · Jun 2025 · R. Xie, C. Park, J. Frougier, J. Li, M. G. Sung, M. Abedin</p>
+        </div>
+      </div>
+      <div class="pub-item">
+        <span class="pub-type">Patent</span>
+        <div>
+          <p class="pub-title">Diagnostic Photonic Biosensor Methods, Apparatus, and System</p>
+          <p class="pub-venue"><em>US 2024/0001358</em> · Jan 2024 · R. F. Jakubowicz, H. Warren, B. Miller, M. Bryan, D. Steiner, J. Cognetti, N. Cady, M. Abedin, N. Tokranova</p>
+        </div>
+      </div>
+
+      <div class="pub-group">Journal Articles</div>
       <div class="pub-item">
         <span class="pub-type">Journal</span>
         <div>
           <p class="pub-title">Material to system-level benchmarking of CMOS-integrated RRAM with ultra-fast switching for low power on-chip learning</p>
-          <p class="pub-venue"><em>Nature Scientific Reports</em>, 13, 14963 · M. Abedin, N. Gong, K. Beckmann et al.</p>
-        </div>
-      </div>
-      <div class="pub-item">
-        <span class="pub-type">Journal</span>
-        <div>
-          <p class="pub-title">MR-PIPA: An Integrated Multi-level RRAM (HfOx) based Processing-In-Pixel Accelerator</p>
-          <p class="pub-venue"><em>IEEE Journal on Exploratory Solid-State Computational Devices and Circuits</em> · M. Abedin et al.</p>
-        </div>
-      </div>
-      <div class="pub-item">
-        <span class="pub-type">Journal</span>
-        <div>
-          <p class="pub-title">Disposable photonics for cost-effective clinical bioassays: application to COVID-19 antibody testing</p>
-          <p class="pub-venue"><em>Lab on a Chip</em>, 21(15):2913–2921 · HOT Article 2021 · J.S. Cognetti, D.J. Steiner, M. Abedin et al.</p>
+          <p class="pub-venue"><em>Scientific Reports</em>, 13, 14963 (2023) · M. Abedin, N. Gong, K. Beckmann, M. Liehr et al.</p>
         </div>
       </div>
       <div class="pub-item">
         <span class="pub-type">Journal</span>
         <div>
           <p class="pub-title">Enhanced Computational Study with Experimental Correlation on I–V Characteristics of Tantalum Oxide (TaOx) Memristor Devices in a 1T1R Configuration</p>
-          <p class="pub-venue"><em>Wiley Small</em> · S. Sihn, W. Chambers, M. Abedin et al.</p>
+          <p class="pub-venue"><em>Small</em> (2024) · S. Sihn, W. Chambers, M. Abedin, K. Beckmann, N. Cady, S. Ganguli, A. Roy</p>
+        </div>
+      </div>
+      <div class="pub-item">
+        <span class="pub-type">Journal</span>
+        <div>
+          <p class="pub-title">MR-PIPA: An Integrated Multi-level RRAM (HfOx) based Processing-In-Pixel Accelerator</p>
+          <p class="pub-venue"><em>IEEE JXCDC</em> (2022) · M. Abedin, A. Roohi, N. Cady, S. Angizi</p>
+        </div>
+      </div>
+      <div class="pub-item">
+        <span class="pub-type">Journal</span>
+        <div>
+          <p class="pub-title">Disposable photonics for cost-effective clinical bioassays: application to COVID-19 antibody testing</p>
+          <p class="pub-venue"><em>Lab on a Chip</em>, 21(15):2913–2921 (2021) · Equal-contribution first author · RSC HOT Article · J.S. Cognetti, D.J. Steiner, M. Abedin et al.</p>
+        </div>
+      </div>
+
+      <div class="pub-group">Conference Papers</div>
+      <div class="pub-item">
+        <span class="pub-type">Conference</span>
+        <div>
+          <p class="pub-title">Silicon-Proven 4Kb RRAM Array Design in 65nm CMOS Technology Node</p>
+          <p class="pub-venue"><em>IEEE MWSCAS 2026</em> · M. Abedin, J. Solanki, M. Liehr, K. Beckmann, N. Cady</p>
         </div>
       </div>
       <div class="pub-item">
         <span class="pub-type">Conference</span>
         <div>
-          <p class="pub-title">DTCO Guided Process Integration: Case Studies From FEOL & BEOL with BSPDN</p>
-          <p class="pub-venue"><em>2024 SEMI ASMC</em> · M. Abedin, S. Khan, N. Lanzillo, D. Dechene</p>
+          <p class="pub-title">In Memory Image Processing Using 65nm CMOS-integrated 1T-1R RRAM Arrays</p>
+          <p class="pub-venue"><em>Device Research Conference (DRC) 2026</em> · J. Solanki, M. Abedin, Q. Elnojomi, M. Liehr, N. Nostrand, K. Beckmann, N. Cady</p>
+        </div>
+      </div>
+      <div class="pub-item">
+        <span class="pub-type">Conference</span>
+        <div>
+          <p class="pub-title">DTCO Guided Process Integration: Case Studies From FEOL &amp; BEOL with BSPDN</p>
+          <p class="pub-venue"><em>SEMI ASMC 2024</em> · M. Abedin, S. Khan, N. Lanzillo, D. Dechene</p>
+        </div>
+      </div>
+      <div class="pub-item">
+        <span class="pub-type">Conference</span>
+        <div>
+          <p class="pub-title">A Processing-in-Pixel Accelerator based on Multi-level HfOx RRAM</p>
+          <p class="pub-venue"><em>CASES, Embedded Systems Week 2022</em> · M. Abedin, A. Roohi, N. Cady, S. Angizi</p>
+        </div>
+      </div>
+      <div class="pub-item">
+        <span class="pub-type">Conference</span>
+        <div>
+          <p class="pub-title">Analog NVM Synapse for Hardware-Aware Neural Network Training Optimization on 65nm CMOS TaOx RRAM Devices</p>
+          <p class="pub-venue"><em>ICONS 2022</em> · M. Liehr, M. Abedin, K. Beckmann, N. Cady</p>
         </div>
       </div>
       <div class="pub-item">
         <span class="pub-type">Conference</span>
         <div>
           <p class="pub-title">In-memory Computation of Error-Correcting Codes Using a Reconfigurable HfOx RRAM 1T1R Array</p>
-          <p class="pub-venue"><em>IEEE MWSCAS 2021</em>, pp. 593–598 · M. Abedin et al.</p>
-        </div>
-      </div>
-      <div class="pub-item">
-        <span class="pub-type">Patent</span>
-        <div>
-          <p class="pub-title">Photonic Biosensors for Diagnostics</p>
-          <p class="pub-venue">WO 2022/164982 A1 · CA 3209078 A1 · N. Cady, N. Tokranova, M. Abedin et al.</p>
-        </div>
-      </div>
-      <div class="pub-item">
-        <span class="pub-type">Patent</span>
-        <div>
-          <p class="pub-title">Source/Drain Extension with Spacer Layers; Wrap-Around Contact Having Non-Uniform Thickness; Backside Gate Contact & Cross-Couple Connect</p>
-          <p class="pub-venue">USPTO · M. Abedin, R. Xie, T. Li, J. Frougier et al. · 15+ additional patents pending</p>
+          <p class="pub-venue"><em>IEEE MWSCAS 2021</em>, pp. 593–598 · M. Abedin, M. Liehr, K. Beckmann, J. Hazra, S. Rafiq, N. Cady</p>
         </div>
       </div>
     </div>
@@ -946,8 +1284,8 @@
 <section id="awards">
   <div class="section-inner">
     <div class="section-header">
-      <span class="section-num">04</span>
-      <h2 class="section-title">Honors & Awards</h2>
+      <span class="section-num">05</span>
+      <h2 class="section-title">Honors, Awards &amp; Funding</h2>
       <div class="section-rule"></div>
     </div>
     <div class="awards-list">
@@ -955,56 +1293,104 @@
         <div class="award-year">2025</div>
         <div class="award-content">
           <h3>IBM Master Inventor</h3>
-          <p>Awarded to ~0.36% of IBM engineers companywide for inventions of significant importance, IP portfolio contribution, and mentoring innovators.</p>
+          <p>Recognized for inventions of significant importance, mentoring new innovators, and adding value to IBM's IP portfolio — awarded to ~0.3% of IBM innovators annually.</p>
         </div>
       </div>
       <div class="award-item">
         <div class="award-year">2025</div>
         <div class="award-content">
           <h3>IBM Technical Excellence Award</h3>
-          <p>Recognizing outstanding performance and defining contribution to a significant project outcome — received within two years of joining IBM.</p>
+          <p>Honored for outstanding performance, remarkable commitment, and defining technical contributions to a major project outcome within two years of joining IBM.</p>
         </div>
       </div>
       <div class="award-item">
         <div class="award-year">2025</div>
         <div class="award-content">
-          <h3>IEEE EDS Summer School Grant</h3>
-          <p>Won $10,000 IEEE award (one of 3–4 awarded globally) to organize the Semiconductor & Quantum Summer School for students and professionals in Schenectady, NY.</p>
+          <h3>IEEE EDS Summer School Award</h3>
+          <p>Co-wrote and won funding for an IEEE EDS Summer School on Semiconductor and Quantum, supporting a multi-day event for students and professionals.</p>
+        </div>
+      </div>
+      <div class="award-item">
+        <div class="award-year">2024</div>
+        <div class="award-content">
+          <h3>Technical Lead, SUNY–IBM Research Project</h3>
+          <p>Led a SUNY–IBM research alliance project on RRAM for AI applications, focused on CMOS-compatible materials, 300mm fabrication, and mentoring PhD students.</p>
         </div>
       </div>
       <div class="award-item">
         <div class="award-year">2023</div>
         <div class="award-content">
           <h3>IBM Leadership Acceleration Program (LEAP)</h3>
-          <p>Selected by IBM senior managers for this nationally recognized leadership development program in recognition of planning, execution, and training of young engineers.</p>
+          <p>Selected by IBM senior managers for leadership potential demonstrated through planning, execution, and mentoring of early-career engineers.</p>
         </div>
       </div>
       <div class="award-item">
         <div class="award-year">2021</div>
         <div class="award-content">
-          <h3>2nd Prize — Hyperspace Challenge (U.S. Space Force)</h3>
-          <p>Awarded $15,000 for a neuromorphic computing proposal for low-power, low-latency space applications, sponsored by the U.S. Space Force and Air Force Research Lab.</p>
+          <h3>2nd Prize — Hyperspace Challenge</h3>
+          <p>Helped secure $15,000 for a neuromorphic-space proposal through the U.S. Space Force and Air Force Research Lab innovation challenge.</p>
         </div>
       </div>
       <div class="award-item">
         <div class="award-year">2021</div>
         <div class="award-content">
           <h3>Lab on a Chip HOT Article</h3>
-          <p>Article on disposable photonics for COVID-19 antibody testing recognized as a highly influential publication of 2021 by the journal editors and referees.</p>
+          <p>Article on disposable photonics for COVID-19 antibody testing designated HOT by the journal for quality and impact.</p>
+        </div>
+      </div>
+      <div class="award-item">
+        <div class="award-year">2021</div>
+        <div class="award-content">
+          <h3>Most Popular Talk, 2nd Place — Albany Nanotech Symposium</h3>
+          <p>Presentation on RRAM-enabled neuromorphic hardware and multiplexed antibody testing.</p>
         </div>
       </div>
       <div class="award-item">
         <div class="award-year">2020–21</div>
         <div class="award-content">
           <h3>John Sullivan Fellowship (×2)</h3>
-          <p>Awarded $1,000 each year by the College of Nanotechnology, Science, and Engineering (University at Albany) to support graduate scholarly opportunities in nanotechnology.</p>
+          <p>Awarded in consecutive years by the College of Nanotechnology, Science and Engineering to support scholarly and professional development in nanotechnology.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICE -->
+<section id="service">
+  <div class="section-inner">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <h2 class="section-title">Leadership &amp; Service</h2>
+      <div class="section-rule"></div>
+    </div>
+    <div class="awards-list">
+      <div class="award-item">
+        <div class="award-year">2026</div>
+        <div class="award-content">
+          <h3>Program Committee — ICCAD 2026</h3>
+          <p>International Conference on Computer-Aided Design, a tier-one conference on electronic design automation.</p>
         </div>
       </div>
       <div class="award-item">
-        <div class="award-year">2021</div>
+        <div class="award-year">2023–2026</div>
         <div class="award-content">
-          <h3>2nd Most Popular Talk — Albany Nanotech Symposium</h3>
-          <p>Talk on "Predicting COVID-19 Infection Using RRAM-enabled Neuromorphic Hardware and Multiplexed Antibody Testing" recognized at the IEEE / IBM AI Hardware Center symposium.</p>
+          <h3>Reviewer — IEDM, VLSI Symposium, DAC</h3>
+          <p>IEEE International Electron Devices Meeting (2023–2026), IEEE/JSAP Symposium on VLSI Technology and Circuits (2023–2026), and Design Automation Conference (2023–2024).</p>
+        </div>
+      </div>
+      <div class="award-item">
+        <div class="award-year">2025–2026</div>
+        <div class="award-content">
+          <h3>Organizing Committee — Albany Nanotechnology Symposium</h3>
+          <p>Regional symposium organized with leading semiconductor companies (IBM, TEL, AMAT, NY CREATES) and academia (University at Albany, RPI).</p>
+        </div>
+      </div>
+      <div class="award-item">
+        <div class="award-year">Ongoing</div>
+        <div class="award-content">
+          <h3>Vice-Chair — IEEE EDS Schenectady Section</h3>
+          <p>Arranged multiple talks, symposiums, and the EDS Summer School.</p>
         </div>
       </div>
     </div>
@@ -1015,27 +1401,27 @@
 <section id="education">
   <div class="section-inner">
     <div class="section-header">
-      <span class="section-num">05</span>
+      <span class="section-num">07</span>
       <h2 class="section-title">Education</h2>
       <div class="section-rule"></div>
     </div>
     <div class="edu-grid">
       <div class="edu-card">
-        <div class="edu-deg">Ph.D.</div>
-        <h3 class="edu-school">University at Albany, </h3>
-        <p class="edu-field">Nanoscale Engineering<br><em>Resistive RAM Arrays for energy-efficient computing</em></p>
+        <div class="edu-deg">Ph.D. Studies</div>
+        <h3 class="edu-school">University at Albany</h3>
+        <p class="edu-field">Nanoscale Engineering<br><em>RRAM arrays for energy-efficient computing</em></p>
         <div class="edu-year">2020 – 2023</div>
       </div>
       <div class="edu-card">
         <div class="edu-deg">M.S.</div>
-        <h3 class="edu-school">University at Albany, </h3>
+        <h3 class="edu-school">University at Albany</h3>
         <p class="edu-field">Nanoscale Engineering<br><em>Microfluidics for optical sensors (Lab-on-a-Chip)</em></p>
         <div class="edu-year">2017 – 2020</div>
       </div>
       <div class="edu-card">
         <div class="edu-deg">B.S.</div>
-        <h3 class="edu-school">Chittagong University of Engineering & Technology</h3>
-        <p class="edu-field">Electrical & Electronics Engineering<br><em>Novel pixel circuit design for wide dynamic range CMOS image sensors</em></p>
+        <h3 class="edu-school">Chittagong University of Engineering &amp; Technology</h3>
+        <p class="edu-field">Electrical &amp; Electronics Engineering<br><em>Pixel circuits for wide dynamic range CMOS image sensors</em></p>
         <div class="edu-year">2010 – 2015</div>
       </div>
     </div>
@@ -1048,14 +1434,14 @@
     <div class="contact-grid">
       <div class="contact-left">
         <h2>Let's Connect &amp;<br><em style="font-family:'Cormorant Garamond',serif;font-style:italic;">Collaborate</em></h2>
-        <p>Open to research collaborations, mentorship inquiries, speaking invitations, and academic opportunities. Always happy to connect with students and researchers working in semiconductor technology, AI hardware, or quantum devices.</p>
+        <p>Open to research collaborations, mentorship inquiries, speaking invitations, and teaching opportunities. Always happy to connect with students and researchers working in semiconductor technology, advanced packaging, or AI hardware.</p>
       </div>
       <div class="contact-items">
         <div class="contact-item">
           <div class="ci-icon">✉</div>
           <div>
             <div class="ci-label">Email</div>
-            <a href="/cdn-cgi/l/email-protection#97fafef9fff6edb9f2f2f2b9f4e2f2e3d7f0faf6fefbb9f4f8fa" class="ci-value"><span class="__cf_email__" data-cfemail="f39e9a9d9b9289dd969696dd90869687b3949e929a9fdd909c9e">[email&#160;protected]</span></a>
+            <a href="mailto:mabedin@ucsc.edu" class="ci-value">mabedin@ucsc.edu</a>
           </div>
         </div>
         <div class="contact-item">
@@ -1075,16 +1461,25 @@
         <div class="contact-item">
           <div class="ci-icon">⬡</div>
           <div>
-            <div class="ci-label">Affiliation</div>
-            <span class="ci-value">IBM Research · Albany, NY</span>
+            <div class="ci-label">Affiliations</div>
+            <span class="ci-value">IBM Research · UCSC Silicon Valley Extension</span>
           </div>
         </div>
         <div class="contact-item">
           <div class="ci-icon">◎</div>
           <div>
             <div class="ci-label">IEEE Role</div>
-            <span class="ci-value">Vice-Chair, EDS Schenectady Chapter</span>
+            <span class="ci-value">Vice-Chair, EDS Schenectady Section</span>
           </div>
         </div>
       </div>
-    </
+    </div>
+  </div>
+</section>
+
+<footer>
+  © 2026 <span>Minhaz Ibna Abedin</span> &nbsp;·&nbsp; Delmar, New York
+</footer>
+
+</body>
+</html>
