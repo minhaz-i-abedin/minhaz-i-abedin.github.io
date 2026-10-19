@@ -1,0 +1,1705 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Edu_game</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap">
+<style>
+/* Layout: level rail on top, one dark "die cross-section" stage with a HUD above it, physics notes below. Single look: silicon blue-black with copper traces. */
+:root{--bg:#f5f2ec;--panel:#ede9df;--panel2:#e4dfd3;--line:#d4cfc5;--fg:#1a2540;--mute:#6b6458;--cu:#c8401a;--e:#2a4a8a;--good:#2f7d55;--bad:#b00020;--warn:#b45309;
+--ff-d:'Outfit',system-ui,sans-serif;--ff-b:'Outfit',system-ui,sans-serif;--ff-m:'DM Mono',ui-monospace,monospace;--ff-h:'Cormorant Garamond',Georgia,serif;color-scheme:light}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--ff-b);padding-block:22px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.app{max-width:980px;margin:0 auto;display:grid;gap:16px}
+h1{font:600 52px/1 var(--ff-h);letter-spacing:0;margin:0 0 8px;color:var(--fg)}
+h1 em{font-style:italic;color:var(--cu)}
+.sub{margin:0;color:var(--mute);max-width:64ch}
+.rail{display:grid;gap:8px}
+.grp{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.gl{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px;width:100%;margin-top:6px}
+.gl em{font:600 12px var(--ff-m);font-style:normal;letter-spacing:.14em;text-transform:uppercase;color:var(--cu);border:1px solid var(--cu);border-radius:3px;padding:1px 7px}
+.gl b{font:500 12px var(--ff-m);letter-spacing:.14em;text-transform:uppercase;color:var(--fg)}
+.gl i{font:400 13px var(--ff-b);font-style:normal;color:var(--mute)}
+.credit{margin:10px 0 0;font:400 12px var(--ff-m);letter-spacing:.04em;color:var(--mute)}
+.credit b{color:var(--fg);font-weight:500}
+.foot{margin:0;padding-top:4px;text-align:center;font:400 12px var(--ff-m);color:var(--mute)}
+.lv{display:flex;gap:8px;align-items:baseline;font:600 13px var(--ff-d);letter-spacing:.04em;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:7px 11px;cursor:pointer}
+.lv.on{border-color:var(--cu);background:var(--panel2)}
+.lv .st{font:12px var(--ff-m);color:#b9b2a2;letter-spacing:.05em}
+.lv .st b{color:var(--cu);font-weight:400}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;position:relative}
+.win{position:absolute;left:50%;top:160px;z-index:5;width:min(92%,430px);transform:translateX(-50%);background:var(--bg);border:2px solid var(--good);border-radius:8px;padding:18px 20px 16px;box-shadow:0 12px 34px rgba(26,37,64,.25);text-align:center;display:grid;gap:6px;animation:winpop .35s cubic-bezier(.2,1.3,.4,1)}
+.win[hidden]{display:none}
+.win .wk{font:600 12px var(--ff-m);letter-spacing:.16em;text-transform:uppercase;color:var(--good)}
+.win h3{font:600 32px/1.1 var(--ff-h);margin:0;color:var(--fg)}
+.win .ws{font:700 28px var(--ff-d);letter-spacing:.12em;color:var(--cu)}
+.win .ws s{text-decoration:none;color:#b9b2a2}
+.win p{margin:0;color:var(--mute);font-size:14px}
+.win .wb{display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap}
+@keyframes winpop{from{opacity:0;transform:translateX(-50%) translateY(-12px) scale(.94)}to{opacity:1;transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){.win{animation:none}}
+.hud{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:22px;padding:18px 20px 16px;border-bottom:1px solid var(--line)}
+.eyebrow{font:500 11px var(--ff-m);letter-spacing:.14em;text-transform:uppercase;color:var(--cu)}
+h2{font:600 32px/1.1 var(--ff-h);margin:4px 0 6px;text-wrap:balance}
+#hGoal{margin:0;color:var(--mute);max-width:60ch}
+.meters{display:grid;gap:12px;align-content:start;min-width:0}
+.m .mh{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font:12px var(--ff-m);color:var(--mute);margin-bottom:5px}
+.m .mh b{color:var(--fg);font-weight:500}
+.m .mh i{font-style:normal}
+.bar{position:relative;height:9px;background:var(--panel2);border:1px solid var(--line);border-radius:2px}
+.bar>span{position:absolute;inset:0 auto 0 0;display:block;transition:width .12s}
+.bar>u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--fg);text-decoration:none}
+canvas{display:block;width:100%;touch-action:pan-y;background:var(--bg)}
+canvas.drag{touch-action:none}
+canvas[hidden]{display:none}
+#prof{height:140px;border-top:1px solid var(--line);touch-action:pan-y}
+.readout{min-height:44px;padding:10px 20px;border-top:1px solid var(--line);font:12px/1.5 var(--ff-m);color:var(--mute)}
+.readout b{color:var(--fg);font-weight:500}
+.actions{display:flex;flex-wrap:wrap;gap:8px;padding:12px 20px 16px;border-top:1px solid var(--line)}
+.btn{font:600 13px var(--ff-d);letter-spacing:.07em;text-transform:uppercase;padding:9px 15px;background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:3px;cursor:pointer}
+.btn.pri{background:var(--cu);color:#fff;border-color:var(--cu)}
+.btn:disabled{opacity:.4;cursor:default}
+.tools{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+.tools:empty{display:none}
+.btn.tool[aria-pressed=true]{border-color:var(--e);color:var(--e);background:#e3e8f2}
+.btn:focus-visible,.lv:focus-visible,.stp:focus-visible{outline:2px solid var(--e);outline-offset:2px}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px 20px;display:grid;gap:14px}
+.note h3{font:600 13px var(--ff-d);letter-spacing:.1em;text-transform:uppercase;color:var(--cu);margin:0 0 4px}
+.note p{margin:0;max-width:70ch}
+.fx{font:500 14px var(--ff-m);background:var(--panel2);padding:8px 12px;border-radius:3px;display:inline-block;color:var(--fg);max-width:100%;overflow-x:auto}
+.res{border:1px solid var(--good);border-radius:4px;padding:14px 16px;display:grid;gap:8px}
+.res.bad{border-color:var(--bad)}
+.res .stars{font:700 22px var(--ff-d);letter-spacing:.1em;color:var(--cu)}
+.res .stars s{text-decoration:none;color:#b9b2a2}
+.bk{display:grid;gap:4px;font:12px var(--ff-m);color:var(--mute)}
+.bk div{display:grid;grid-template-columns:minmax(0,110px) 1fr 70px;gap:8px;align-items:center}
+.bk span.b{height:6px;background:var(--cu);border-radius:1px;display:block}
+.bk b{color:var(--fg);font-weight:500;text-align:right}
+#widen{padding:6px 14px 2px}
+.wr{display:grid;grid-template-columns:62px minmax(0,1fr) 64px 106px;gap:10px;align-items:center;padding:9px 6px;border-bottom:1px solid var(--line)}
+.wr.flash{background:rgba(26,37,64,.08)}
+.chip{font:600 12px var(--ff-d);letter-spacing:.06em;padding:3px 4px;border:1px solid currentColor;border-radius:2px;text-align:center}
+.wv{display:grid;gap:5px;min-width:0}
+.wv small{font:11px var(--ff-m);color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track{height:20px;display:flex;align-items:center;gap:3px}
+.track i{display:block;border-radius:1px}
+.wR{font:500 12px var(--ff-m);text-align:right}
+.step{display:flex;align-items:center;justify-content:flex-end;gap:6px}
+.stp{width:30px;height:30px;font:600 16px var(--ff-d);background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:3px;cursor:pointer;padding:0}
+.stp:disabled{opacity:.3;cursor:default}
+.step output{font:500 12px var(--ff-m);min-width:28px;text-align:center}
+.labctl{display:grid;gap:12px;padding:14px 20px 16px;border-top:1px solid var(--line);border-left:5px solid var(--cu);background:#f9e9e1}
+.labctl[hidden]{display:none}
+.labctl .lh{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 14px}
+.labctl .lh b{font:600 12px var(--ff-m);letter-spacing:.14em;text-transform:uppercase;color:var(--cu)}
+.labctl .lh span{font:400 14px var(--ff-b);color:var(--fg)}
+.lc{display:grid;grid-template-columns:minmax(120px,170px) minmax(0,1fr) auto;gap:6px 14px;align-items:center}
+.lc .cl{font:600 14px var(--ff-d);color:var(--fg)}
+.lc input[type=range]{width:100%;height:30px;margin:0;accent-color:var(--cu);cursor:pointer}
+.lc .rv{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.lc output{font:600 14px var(--ff-m);min-width:104px;text-align:center;color:var(--fg);background:#fff;border:1px solid var(--cu);border-radius:3px;padding:5px 8px}
+.labctl.attn{animation:attn 1.5s ease-in-out 4}
+@keyframes attn{0%,100%{box-shadow:inset 0 0 0 0 rgba(200,64,26,0)}50%{box-shadow:inset 0 0 0 3px rgba(200,64,26,.4)}}
+@media(prefers-reduced-motion:reduce){.labctl.attn{animation:none}}
+.score{font:500 12px var(--ff-m);letter-spacing:.08em;color:var(--mute)}
+.score b{color:var(--cu);font-weight:500}
+.how{border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:0 16px}
+.how summary{cursor:pointer;font:600 12px var(--ff-m);letter-spacing:.14em;text-transform:uppercase;color:var(--cu);padding:11px 0;list-style:none}
+.how summary::-webkit-details-marker{display:none}
+.how summary::before{content:'+ ';}
+.how[open] summary::before{content:'\2212  ';}
+.how ul{margin:0 0 14px;padding-left:18px;display:grid;gap:6px;color:var(--fg)}
+.how p{margin:0 0 12px;color:var(--mute);max-width:70ch}
+.how a{color:var(--cu)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;padding:9px 20px;border-top:1px solid var(--line);font:11px/1.4 var(--ff-m);color:var(--mute)}
+.legend span{display:inline-flex;align-items:center;gap:6px;color:var(--fg)}
+.legend i{display:inline-block;width:12px;height:12px;border:1px solid #1b1b1b}
+.legend em{font-style:normal;color:var(--mute)}
+@media(max-width:700px){
+ .legend{padding:9px 14px}
+ .labctl{padding:12px 14px 14px}
+ .lc{grid-template-columns:minmax(0,1fr) auto}
+ .lc .cl{grid-column:1 / -1}
+ .lc input[type=range]{grid-column:1}
+ h1{font-size:40px}
+ .hud{grid-template-columns:minmax(0,1fr);gap:14px;padding:14px}
+ .readout,.actions{padding-left:14px;padding-right:14px}
+ .wr{grid-template-columns:48px minmax(0,1fr) 54px 98px;gap:6px}
+ #widen{padding:4px 6px}
+}
+@media(prefers-reduced-motion:reduce){.bar>span{transition:none}}
+html.embed body{padding-block:0 8px;background:transparent}
+html.embed .back,html.embed header,html.embed .foot{display:none}
+.banner{display:block;width:100%;height:clamp(150px,34vw,390px);object-fit:cover;object-position:50% 38%;border:1px solid var(--line);border-radius:6px;margin:14px 0 18px}
+</style>
+<script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed')</script>
+
+<div class="app">
+<a class="back" href="index.html" style="font:400 12px 'DM Mono',ui-monospace,monospace;letter-spacing:.15em;text-transform:uppercase;color:#c8401a;text-decoration:none">&larr; M. I. Abedin</a>
+ <img class="banner" src="edu_game_banner.jpg" alt="A cartoon superhero with an e-minus emblem sprinting along a copper trace on a circuit board" width="1408" height="768">
+ <header>
+  <h1>Edu<em>_game</em></h1>
+  <p class="sub">Send current from the package bump down through the metal stack to the transistor. Every wire and via costs resistance. Every neighbor costs capacitance.</p>
+  <p class="credit">Made by <b>Minhaz</b> and <b>Claude</b>. Free to reuse for educational purposes.</p>
+ </header>
+ <details class="how" id="how" open>
+  <summary>How to play</summary>
+  <p>Back-end-of-line (BEOL) is the stack of copper wiring built above a chip&rsquo;s transistors. Thin, tightly packed wires lose voltage to resistance and talk to their neighbors through capacitance. Each level asks you to trade one against the other. <a href="index.html#research">See the research &rarr;</a></p>
+  <ul>
+   <li><b>Move:</b> arrow keys or WASD, or tap the next junction next to the marker.</li>
+   <li><b>Inspect:</b> tap any wire to read its resistance.</li>
+   <li><b>Trade-off labs:</b> use the sliders in the highlighted <i>Your controls</i> box above the drawing. The parts you control are outlined with a dashed line, and every design you try is plotted below.</li>
+   <li><b>Score:</b> up to 3 stars per level. Using a hint caps a level at 2 stars.</li>
+  </ul>
+ </details>
+ <details class="how" id="notes">
+  <summary>Physics notes and limits</summary>
+  <ul>
+   <li><b>Series and parallel:</b> within one path the vias and wires are in series, so their order does not matter and the total is just the sum. The three bumps feed the same transistor through three separate paths that are in parallel, so the current divides by 1/R and the transistor sees less than the best single path. Each path ends in its own contact plug on a wide shared drain.</li>
+   <li><b>S/D contact:</b> the transistor contact here is a source/drain plug on the diffusion, where DC current flows. A MOS gate draws no DC current, so IR drop would not apply to it. A gate net is an RC delay problem instead (see the Lab levels).</li>
+   <li><b>Vias in parallel:</b> n vias give less than an n-fold drop because the current crowds into the nearest one. The game uses n<sub>eff</sub> = n / (1 + 0.1 (n − 1)).</li>
+   <li><b>Narrow copper:</b> resistivity rises from surface and grain-boundary scattering, and the liner takes cross-section. The Route and Widen tables use fixed room-temperature values, which are also lower than the same wires would have at 105 °C (copper is about 30 % higher).</li>
+   <li><b>Electromigration:</b> Black's equation gives the median life, so the labs design to the 0.1 % early-failure tail. Not modeled: the Blech effect (short wires are immune), Joule self-heating, and the series weak-link statistics of a net with many segments.</li>
+   <li><b>Coupling capacitance:</b> a worst-case Miller factor of 2 is applied to a neighbor that switches against the victim; a quiet or grounded neighbor counts once and a neighbor switching the same way would count zero. The score is the effective load, which sets delay, not the crosstalk noise ratio C<sub>c</sub>/(C<sub>c</sub> + C<sub>g</sub>).</li>
+   <li><b>Low-k penalty:</b> the resistance penalty for porous and air-gap films is a teaching heuristic for process damage, not a measured value.</li>
+  </ul>
+ </details>
+ <div class="score" id="score" aria-live="polite"></div>
+ <nav class="rail" id="rail" aria-label="Levels"></nav>
+ <section class="stage" id="stage">
+  <div class="win" id="win" role="status" aria-live="polite" hidden></div>
+  <div class="hud">
+   <div><div class="eyebrow" id="hMode"></div><h2 id="hTitle"></h2><p id="hGoal"></p></div>
+   <div class="meters" id="meters"></div>
+  </div>
+  <div class="labctl attn" id="labctl" hidden></div>
+  <canvas id="cv" role="img" aria-label="Game board"></canvas>
+  <div class="legend" id="legend" aria-label="Legend"></div>
+  <canvas id="prof" role="img" aria-label="Voltage along the path" hidden></canvas>
+  <div class="readout" id="readout"></div>
+  <div class="actions">
+   <div class="tools" id="tools"></div>
+   <button class="btn" id="bReset" type="button">Restart</button>
+   <button class="btn" id="bUndo" type="button">Step back</button>
+   <button class="btn" id="bHint" type="button">Hint</button>
+   <button class="btn pri" id="bNext" type="button" hidden>Next level</button>
+  </div>
+ </section>
+ <section class="note" id="note">
+  <div id="physics"></div>
+  <div id="result"></div>
+ </section>
+ <p class="foot">Edu_game &middot; made by Minhaz and Claude &middot; free to reuse for educational purposes</p>
+</div>
+<script>
+'use strict';
+/* ---------- physics tables (lengths in um, resistivity in ohm*um); stack follows the "CMOS chip structure in 2000s" figure ---------- */
+const LAY = {
+  PAD: { name: 'Solder bump', short: 'BUMP' },
+  CU5: { name: 'Cu 5', short: 'Cu 5', T: 1.2, W: 1.0, rho: 0.0185, span: 300, th: 0.62, color: '#ff6c0a' },
+  CU4: { name: 'Cu 4', short: 'Cu 4', T: 0.7, W: 0.5, rho: 0.019, span: 150, th: 0.52, color: '#ff6c0a' },
+  CU3: { name: 'Cu 3', short: 'Cu 3', T: 0.45, W: 0.24, rho: 0.021, span: 120, th: 0.44, color: '#ff6c0a' },
+  CU2: { name: 'Cu 2', short: 'Cu 2', T: 0.28, W: 0.16, rho: 0.026, span: 80, th: 0.38, color: '#ff6c0a' },
+  TUN: { name: 'Tungsten', short: 'W', T: 0.15, W: 0.1, rho: 0.06, span: 20, th: 0.36, color: '#d78a24' },
+  TR: { name: 'Transistor', short: 'FET' }
+};
+/* resistance of one via that lands on the given layer */
+const VIA_R = { CU5: 0.02, CU4: 0.3, CU3: 1.5, CU2: 5, TUN: 15, TR: 40 };
+const VIA_NAME = { CU5: 'Bump / UBM contact', CU4: 'Via', CU3: 'Via', CU2: 'Via', TUN: 'Cu 1 via', TR: 'W contact plug' };
+const wireR = (k, L, wf = 1, m = 1) => LAY[k].rho * L / (LAY[k].W * wf * m * LAY[k].T);
+/* parallel vias do not share current equally: it crowds into the nearest one and the landing wire adds spreading resistance,
+   so n vias give less than an n-fold drop (n_eff = n / (1 + 0.1 (n - 1))) */
+const nEff = n => n / (1 + 0.1 * (n - 1));
+const viaR = (to, n = 1) => VIA_R[to] / nEff(n);
+const segR = (s, m = s.m) => s.t === 'via' ? s.base / nEff(m) : s.base / m;
+
+function rng(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+/* ---------- routing graph ---------- */
+function dijkstra(g, src) {
+  const dist = new Map(), prev = new Map(), done = new Set();
+  g.nodes.forEach(n => dist.set(n.id, Infinity));
+  dist.set(src, 0);
+  for (;;) {
+    let u = null, best = Infinity;
+    dist.forEach((d, id) => { if (!done.has(id) && d < best) { best = d; u = id; } });
+    if (u === null) break;
+    done.add(u);
+    for (const { e, to } of g.adj.get(u)) {
+      const nd = best + e.R;
+      if (nd < dist.get(to) - 1e-12) { dist.set(to, nd); prev.set(to, { from: u, e }); }
+    }
+  }
+  return { dist, prev };
+}
+function pathTo(res, dst) {
+  const out = []; let c = dst;
+  while (res.prev.has(c)) { const p = res.prev.get(c); out.unshift(p.e); c = p.from; }
+  return out;
+}
+function edgeBetween(g, a, b) {
+  const f = g.adj.get(a).find(x => x.to === b);
+  return f ? f.e : null;
+}
+
+/* Three bumps, three independent paths to the same transistor.
+   Each bump lands on the top copper pad, steps down to its own lateral layer, runs across the die, steps down to
+   the tungsten level and ends in its own contact plug on the shared drain. Nothing is shared between the paths
+   except the supply and the drain, so a path is a pure series chain: its resistance is the SUM of its parts,
+   in any order, and the three chains conduct in parallel (current divides in inverse proportion to resistance). */
+function genRoute3(cfg) {
+  const rows = cfg.rows, K = rows.length - 2, C = cfg.cols, tr = C - 1;
+  const lay = cfg.layers.slice().sort((x, y) => y - x);           /* deepest first = leftmost bump */
+  const sb = Math.round(0.17 * (C - 1) * 20) / 20, sa = 0.042 * (C - 1);
+  const aCol = p => p * sb, tCol = p => tr - (2 - p) * sa;
+  let seed = cfg.seed, fallback = null;
+  for (let tries = 0; tries < 400; tries++, seed++) {
+    const r = rng(seed), nodes = [], edges = [], adj = new Map(), paths = [], blocked = [], term = new Set();
+    const id = (row, col) => row + ':' + (+col.toFixed(3));
+    const addNode = (nid, row, col, o) => { if (adj.has(nid)) return; nodes.push(Object.assign({ id: nid, row, col }, o)); adj.set(nid, []); };
+    const addEdge = (a, b, o) => { const e = Object.assign({ id: edges.length, a, b }, o); edges.push(e); adj.get(a).push({ e, to: b }); adj.get(b).push({ e, to: a }); return e; };
+    addNode('src', 0, aCol(1), { kind: 'src' });
+    addNode('snk', K + 1, tCol(1), { kind: 'snk' });
+    lay.forEach((Lp, p) => {
+      const a = aCol(p), t = tCol(p), pe = [], bump = 'b' + p, trn = id(K + 1, t);
+      addNode(bump, 0, a, { kind: 'bump', p });
+      addEdge('src', bump, { kind: 'src', R: 1e-6, p });
+      for (let row = 1; row <= Lp; row++) addNode(id(row, a), row, a);
+      pe.push(addEdge(bump, id(1, a), { kind: 'via', to: rows[1], n: 1, R: viaR(rows[1], 1), pel: 2, p }));
+      for (let row = 1; row < Lp; row++) {
+        const n = [1, 1, 2][Math.floor(r() * 3)];
+        pe.push(addEdge(id(row, a), id(row + 1, a), { kind: 'via', to: rows[row + 1], n, R: viaR(rows[row + 1], n), pel: 2, p }));
+      }
+      const cols = [a]; for (let c = Math.floor(a) + 1; c < t - 1e-9; c++) if (c > a + 1e-9) cols.push(c); cols.push(t);
+      cols.forEach(c => addNode(id(Lp, c), Lp, c));
+      const kill = (cfg.blocked || []).includes(p) ? Math.floor(r() * (cols.length - 1)) : -1;
+      let dead = false;
+      for (let i = 0; i < cols.length - 1; i++) {
+        const u = cols[i], v = cols[i + 1], wf = cfg.mix[Math.floor(r() * cfg.mix.length)], L = LAY[rows[Lp]].span * (v - u);
+        if (i === kill) { dead = true; blocked.push({ row: Lp, c0: u, c1: v }); continue; }
+        pe.push(addEdge(id(Lp, u), id(Lp, v), { kind: 'wire', layer: rows[Lp], wf, L, R: wireR(rows[Lp], L, wf), pel: 3, p }));
+      }
+      for (let row = Lp; row <= K; row++) addNode(id(row, t), row, t);
+      for (let row = Lp; row < K; row++) {
+        const n = [1, 1, 2][Math.floor(r() * 3)];
+        pe.push(addEdge(id(row, t), id(row + 1, t), { kind: 'via', to: rows[row + 1], n, R: viaR(rows[row + 1], n), pel: 2, p, arr: true }));
+      }
+      addNode(trn, K + 1, t, { kind: 'term', p }); term.add(trn);
+      pe.push(addEdge(id(K, t), trn, { kind: 'via', to: 'TR', n: 1, R: viaR('TR', 1), pel: 2, p, arr: true }));
+      addEdge(trn, 'snk', { kind: 'snk', R: 1e-6, p });
+      paths.push({ p, layer: rows[Lp], edges: pe, dead, R: dead ? Infinity : pe.reduce((s, e) => s + e.R, 0) });
+    });
+    const live = paths.filter(q => !q.dead).sort((x, y) => x.R - y.R);
+    if (live.length < 2) continue;
+    const g = { rows, cols: C, nodes, edges, adj, start: 'src', goal: 'snk', term, paths, blocked, sa, sb, tr, K };
+    const res = dijkstra(g, 'src');
+    g.opt = live[0].R; g.optPath = pathTo(res, 'snk');
+    g.par = 1 / live.reduce((s, q) => s + 1 / q.R, 0);
+    g.best = live[0].p;
+    if (!fallback) fallback = g;
+    if (cfg.best != null && live[0].p !== cfg.best) continue;
+    if (cfg.close && (live[1].R / live[0].R < cfg.close[0] || live[1].R / live[0].R > cfg.close[1])) continue;
+    return g;
+  }
+  return fallback;
+}
+
+/* ---------- widening puzzle: knapsack over segments ---------- */
+function widenSolve(segs, B) {
+  let dp = new Array(B + 1).fill(Infinity); dp[0] = 0;
+  const choice = [];
+  for (const s of segs) {
+    const nd = new Array(B + 1).fill(Infinity), ch = new Array(B + 1).fill(-1);
+    for (let c = 0; c <= B; c++) {
+      if (!isFinite(dp[c])) continue;
+      s.opts.forEach((o, k) => {
+        const cc = c + o.cost;
+        if (cc <= B && dp[c] + o.R < nd[cc] - 1e-12) { nd[cc] = dp[c] + o.R; ch[cc] = k * 1000 + c; }
+      });
+    }
+    dp = nd; choice.push(ch);
+  }
+  let bc = 0; dp.forEach((v, c) => { if (v < dp[bc]) bc = c; });
+  const pick = []; let c = bc;
+  for (let i = segs.length - 1; i >= 0; i--) { const v = choice[i][c]; pick[i] = Math.floor(v / 1000); c = v % 1000; }
+  return { R: dp[bc], pick, cost: bc };
+}
+
+/* ---------- spacing puzzle: coupling capacitance ---------- */
+const K_EPS = 0.02568; /* fF/um per unit of T/S, for eps_r = 2.9 */
+function gapsToX(gaps, ws) {
+  const xs = []; let x = gaps[0];
+  for (let i = 0; i < ws.length; i++) { xs.push(x); x += ws[i] + gaps[i + 1]; }
+  return xs;
+}
+function ccFF(L, s, w) {
+  /* Sakurai-Tamaru sidewall coupling per um with fringing, the same model as the RC labs (eps_r 2.9, plane spacing h = T) */
+  const h = L.h || L.T, t = L.T / h, eps = 8.854e-3 * (L.er || 2.9);
+  return L.Lw * eps * (0.03 * w / h + 0.83 * t - 0.07 * Math.pow(t, 0.222)) * Math.pow(h / s, 1.34);
+}
+function ceffOf(L, xs, i) {
+  const ws = L.wires; let c = L.Cg * L.Lw;
+  if (i > 0) { const s = xs[i] - (xs[i - 1] + ws[i - 1].w); c += (ws[i - 1].t === 'A' ? 2 : 1) * ccFF(L, s, ws[i].w); }
+  if (i < ws.length - 1) { const s = xs[i + 1] - (xs[i] + ws[i].w); c += (ws[i + 1].t === 'A' ? 2 : 1) * ccFF(L, s, ws[i].w); }
+  return c;
+}
+function worstVictim(L, xs) {
+  let f = 0;
+  L.wires.forEach((w, i) => { if (w.t === 'V') f = Math.max(f, ceffOf(L, xs, i)); });
+  return f;
+}
+const SH_W = 40;
+function optimizeWires(L, wires, iters, restarts, seed) {
+  const n = wires.length, ws = wires.map(w => w.w), total = L.Wc - ws.reduce((a, b) => a + b, 0);
+  if (total < L.smin * (n + 1) - 1e-9) return null;
+  const r = rng(seed), xs = new Array(n), view = Object.assign({}, L, { wires });
+  const ev = g => { let x = g[0]; for (let i = 0; i < n; i++) { xs[i] = x; x += ws[i] + g[i + 1]; } return worstVictim(view, xs); };
+  let best = { f: Infinity, gaps: null };
+  for (let rs = 0; rs < restarts; rs++) {
+    const gaps = new Array(n + 1).fill(L.smin); let rest = total - L.smin * (n + 1);
+    for (let k = 0; k < n + 1; k++) { const add = rs === 0 ? rest / (n + 1) : Math.min(rest, r() * rest / (n + 1) * 2); gaps[k] += add; rest -= add; }
+    gaps[n] += rest;
+    let f = ev(gaps);
+    for (let it = 0; it < iters; it++) {
+      const i = Math.floor(r() * (n + 1)), j = Math.floor(r() * (n + 1));
+      if (i === j) continue;
+      const d = r() * (it < iters / 2 ? 24 : 3);
+      if (gaps[i] - d < L.smin) continue;
+      gaps[i] -= d; gaps[j] += d;
+      const f2 = ev(gaps);
+      if (f2 <= f + 1e-9) f = f2; else { gaps[i] += d; gaps[j] -= d; }
+    }
+    if (f < best.f) best = { f, gaps: gaps.slice() };
+  }
+  return best;
+}
+/* best layout, allowing up to L.shields extra supply wires to be inserted into any gap */
+function optimizeSpace(L) {
+  const n = L.wires.length, combos = [[]];
+  const rec = (start, left, cur) => {
+    if (left === 0) return;
+    for (let s = start; s <= n; s++) { cur.push(s); combos.push(cur.slice()); rec(s + 1, left - 1, cur); cur.pop(); }
+  };
+  rec(0, L.shields || 0, []);
+  let best = { f: Infinity };
+  combos.forEach((cb, k) => {
+    const wires = []; for (let i = 0; i <= n; i++) { if (cb.includes(i)) wires.push({ t: 'G', w: SH_W, n: 'GND', add: true }); if (i < n) wires.push(L.wires[i]); }
+    const o = optimizeWires(L, wires, 5000, 2, 7 + k);
+    if (o && o.f < best.f) best = { f: o.f, gaps: o.gaps, wires };
+  });
+  const o = optimizeWires(L, best.wires, 30000, 3, 99);
+  if (o && o.f < best.f) { best.f = o.f; best.gaps = o.gaps; }
+  best.xs = gapsToX(best.gaps, best.wires.map(w => w.w));
+  return best;
+}
+
+/* ---------- schematic cross-section after the "CMOS chip structure in 2000s" figure ---------- */
+const FC = {
+  paper: '#f5f2ec', ink: '#1b1b1b', cu: '#ff6c0a', cuUsed: '#ff9a4d', w: '#d78a24', sod: '#d9e3ea', sic: '#c3b0c3', teos: '#e8a9a0',
+  psg: '#5b8bd4', usg: '#92c3ee', seal: '#b39ed4', sin: '#6a35c2', poly: '#a0614a', cosi: '#7b4a1b', spacer: '#e3b5b0',
+  pwell: '#94949e', nwell: '#d8cbd9', nsi: '#bcbcc8', psi: '#9a9aa8', box: '#8892b8', wafer: '#8678b8', blocked: '#cdbcae',
+  ubm: '#a3123c', au: '#f0d040', solder: '#aeaeae'
+};
+const VIA_PX = { CU5: 30, CU4: 24, CU3: 20, CU2: 16, TUN: 14, TR: 14 };
+
+function figGeo(W, rows) {
+  const narrow = W < 640, K = rows.length - 2, gy = narrow ? 52 : 58;
+  const Wb = Math.min(W * (narrow ? 0.3 : 0.17), 150), Hd = Wb * 0.46, gutter = narrow ? 46 : 150, sealH = 70;
+  const yBase = 12 + Hd, ySealTop = yBase + 6, yTop = ySealTop + sealH, yK = yTop + (K - 0.5) * gy, yS = yK + gy * 0.95;
+  const g = { W, narrow, K, gy, Wb, Hd, gutter, sealH, yBase, ySealTop, yTop, yK, yS, H: Math.round(yS + 118), x0: gutter + Math.max(40, Wb / 2 + 18), x1: W - 66, rows };
+  g.y = r => r === 0 ? yTop : r === rows.length - 1 ? yS : yTop + (r - 0.5) * gy;
+  return g;
+}
+function figPath(c, pts) { c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) c.lineTo(pts[i][0], pts[i][1]); c.closePath(); }
+const figRect = (x1, x2, y, th) => [[x1, y - th / 2], [x2, y - th / 2], [x2, y + th / 2], [x1, y + th / 2]];
+const figVia = (x, y1, y2, wt, taper) => { const wb = wt * taper; return [[x - wt / 2, y1], [x + wt / 2, y1], [x + wb / 2, y2], [x - wb / 2, y2]]; };
+/* copper and tungsten: one outline around the union of all shapes, like the source figure */
+function figDraw(c, items) {
+  c.lineJoin = 'round';
+  items.forEach(it => { if (!it.halo) return; figPath(c, it.pts); c.lineWidth = it.haloW || 9; c.strokeStyle = it.halo; c.stroke(); });
+  items.forEach(it => { figPath(c, it.pts); c.lineWidth = 3; c.strokeStyle = FC.ink; c.stroke(); c.fillStyle = FC.ink; c.fill(); });
+  items.forEach(it => { figPath(c, it.pts); c.fillStyle = it.col; c.fill(); });
+  items.forEach(it => { if (!it.heat) return; figPath(c, it.pts); c.fillStyle = 'rgba(190,10,50,' + it.heat.toFixed(2) + ')'; c.fill(); });
+}
+
+/* static background: dielectrics, etch stops, seal layers, solder bump, transistors in silicon */
+function figScene(g, o) {
+  const W = g.W, H = g.H, rows = g.rows, K = g.K, cvs = document.createElement('canvas'); cvs.width = W; cvs.height = H;
+  const c = cvs.getContext('2d'), L = g.gutter, R = W - 8, ink = FC.ink;
+  c.lineJoin = 'round'; c.fillStyle = FC.paper; c.fillRect(0, 0, W, H);
+  const box = (x, y, w, h, col) => { c.fillStyle = col; c.fillRect(x, y, w, h); c.strokeStyle = ink; c.lineWidth = 1; c.strokeRect(x + .5, y + .5, w - 1, h - 1); };
+  const txt = (s, x, y, size, col, font) => { c.font = (font || '400') + ' ' + size + 'px ' + FM; c.fillStyle = col || ink; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(s, x, y); };
+  /* seal stack above the first copper level */
+  const ys = g.ySealTop, yT = g.yTop;
+  box(L, ys, R - L, 30, FC.seal); box(L, ys + 30, R - L, 26, FC.usg); box(L, ys + 56, R - L, 8, FC.sin); box(L, ys + 64, R - L, 5, FC.teos);
+  if (g.W > 560) { txt('seal layer (nitride or oxide)', R - 130, ys + 15, 11); txt('PSG', L + 26, ys + 43, 10); }
+  /* copper levels in spin-on dielectric, each closed by a SiC etch stop and a TEOS strip */
+  for (let r = 1; r <= K; r++) {
+    const y0 = yT + (r - 1) * g.gy, last = r === K && rows[K] === 'TUN';
+    if (last) { box(L, y0, R - L, g.yS - y0, FC.psg); continue; }
+    box(L, y0, R - L, g.gy, FC.sod);
+    box(L, y0 + g.gy - 5, R - L, 5, FC.sic); box(L, y0 + g.gy - 8, R - L, 3, FC.teos);
+    if (g.W > 560 && r < K) txt('SOD', R - 40, y0 + g.gy / 2 - 12, 11, '#3a4a58');
+  }
+  /* silicon with transistors; one source/drain sits under the goal contact */
+  const yS = g.yS, P = 150, goalX = o.goalX;
+  for (let k = -9; k <= 9; k++) {
+    const xg = goalX + 31 + k * P; if (xg + P / 2 < L || xg - P / 2 > R) continue;
+    const pw = k % 2 === 0, xa = Math.max(L, xg + 52), xb = Math.min(R, xg + 98), wide = o.wideSD && k === 0;
+    if (xb > xa && !(o.wideSD && k === -1)) box(xa, yS, xb - xa, 46, FC.usg);
+    const wx = Math.max(L, xg - (wide ? 98 : 52)), wr = Math.min(R, xg + 52);
+    if (wr > wx) box(wx, yS, wr - wx, 46, pw ? FC.pwell : FC.nwell);
+    [[xg - (wide ? 93 : 50), xg - 12], [xg + 12, xg + 50]].forEach(s => { const a = Math.max(L, s[0]), b = Math.min(R, s[1]); if (b > a) { box(a, yS, b - a, 9, pw ? FC.nsi : FC.psi); box(a, yS - 3, b - a, 3, FC.cosi); } });
+    if (xg - 17 > L && xg + 17 < R) {
+      box(xg - 10, yS - 20, 20, 17, FC.poly); box(xg - 10, yS - 24, 20, 4, FC.cosi);
+      box(xg - 15, yS - 20, 5, 17, FC.spacer); box(xg + 10, yS - 20, 5, 17, FC.spacer);
+      c.strokeStyle = FC.sin; c.lineWidth = 3; c.strokeRect(xg - 17.5, yS - 26.5, 35, 27);
+    }
+    if (g.W > 560) { txt(pw ? 'p-well' : 'n-well', xg, yS + 30, 10, '#222'); if (xb - xa > 30) txt('STI', (xa + xb) / 2, yS + 24, 9, '#234'); }
+  }
+  box(L, yS + 46, R - L, 16, FC.box); box(L, yS + 62, R - L, H - yS - 64, FC.wafer);
+  txt('buried SiO2', (L + R) / 2, yS + 54, 10, '#fff'); txt('p-silicon wafer', (L + R) / 2, yS + 62 + (H - yS - 64) / 2, 11, '#fff');
+  /* solder bump(s): SnAg ball with grain texture on a stepped under-bump metal pad */
+  const drawBump = (bx, sc, label) => {
+  const Wb = g.Wb * sc, wTop = Wb * 0.8, wBot = 54 * sc, wOp = wBot + 16 * sc, yBase = ys - 9, Hh = g.Hd * sc;
+  c.beginPath(); c.moveTo(bx - wOp / 2, ys); c.lineTo(bx - wBot / 2, yT); c.lineTo(bx + wBot / 2, yT); c.lineTo(bx + wOp / 2, ys); c.closePath();
+  c.fillStyle = '#9ea4ab'; c.fill();
+  c.lineJoin = 'round'; c.lineWidth = 5; c.strokeStyle = FC.ubm; c.stroke();
+  c.lineWidth = 1.5; c.strokeStyle = FC.au; c.beginPath(); c.moveTo(bx - wOp / 2 + 3, ys); c.lineTo(bx - wBot / 2 + 3, yT - 3); c.lineTo(bx + wBot / 2 - 3, yT - 3); c.lineTo(bx + wOp / 2 - 3, ys); c.stroke();
+  c.fillStyle = FC.ubm; c.fillRect(bx - wTop / 2 - 14, ys - 6, wTop + 28, 6); c.fillStyle = FC.au; c.fillRect(bx - wTop / 2 - 14, ys - 8, wTop + 28, 2);
+  c.save(); c.beginPath(); c.moveTo(bx - Wb / 2, yBase); c.ellipse(bx, yBase, Wb / 2, Hh, 0, Math.PI, 2 * Math.PI); c.closePath();
+  const dg = c.createRadialGradient(bx - Wb * .14, yBase - Hh * .65, 6, bx, yBase - Hh * .3, Wb * .62);
+  dg.addColorStop(0, '#f2f4f6'); dg.addColorStop(.55, '#b9bec4'); dg.addColorStop(1, '#6f757c');
+  c.fillStyle = dg; c.fill(); c.clip();
+  const rr = rng(11);
+  for (let i = 0; i < Math.round(520 * sc * sc); i++) {
+    const px = bx + (rr() - .5) * Wb, py = yBase - rr() * Hh, s = 1 + rr() * 3.2, dark = rr() < .5;
+    c.fillStyle = dark ? 'rgba(60,66,74,' + (.12 + rr() * .2) + ')' : 'rgba(255,255,255,' + (.15 + rr() * .25) + ')';
+    c.beginPath(); c.ellipse(px, py, s * 1.6, s, rr() * 3, 0, 6.3); c.fill();
+  }
+  c.strokeStyle = 'rgba(50,56,64,.35)'; c.lineWidth = 1;
+  for (let i = 0; i < 14; i++) { const px = bx + (rr() - .5) * Wb * .9, py = yBase - rr() * Hh * .9; c.beginPath(); c.moveTo(px, py); c.lineTo(px + (rr() - .5) * 30, py + (rr() - .5) * 20); c.lineTo(px + (rr() - .5) * 50, py + (rr() - .5) * 30); c.stroke(); }
+  c.fillStyle = '#b8935f'; for (let x = bx - Wb / 2; x < bx + Wb / 2; x += 7) { c.beginPath(); c.ellipse(x + 3.5, yBase, 3.8, 5 + rr() * 3, 0, Math.PI, 2 * Math.PI); c.fill(); }
+  c.restore();
+  c.strokeStyle = ink; c.lineWidth = 1.2; c.beginPath(); c.ellipse(bx, yBase, Wb / 2, Hh, 0, Math.PI, 2 * Math.PI); c.stroke();
+  c.font = '400 ' + (g.narrow ? 10 : 12) + 'px ' + FM; c.fillStyle = '#222'; c.textAlign = 'left'; c.textBaseline = 'middle'; if (label) c.fillText('SnAg solder bump', bx + Wb / 2 + 12, yBase - 34);
+  };
+  const bumps = o.bumps || [o.startX], bsc = o.bumps ? (g.narrow ? 0.36 : 0.62) : 1;
+  bumps.forEach((bx, i) => drawBump(bx, bsc, i === bumps.length - 1));
+  if (o.bumps) {
+    /* supply rail above the bumps */
+    const yr = 16, top = ys - 9 - g.Hd * bsc, x1 = Math.min(...bumps), x2 = Math.max(...bumps);
+    c.strokeStyle = ink; c.lineWidth = 4; c.lineCap = 'round'; c.beginPath(); c.moveTo(x1 - 14, yr); c.lineTo(x2 + 14, yr); c.stroke();
+    c.lineWidth = 3; bumps.forEach(x => { c.beginPath(); c.moveTo(x, yr); c.lineTo(x, top + 3); c.stroke(); });
+    c.font = '600 11px ' + FM; c.fillStyle = ink; c.textAlign = 'right'; c.textBaseline = 'middle'; c.fillText('VDD', x1 - 22, yr);
+  }
+  /* blocked slots: copper that belongs to other nets */
+  (o.dummies || []).forEach(d => { const p = figRect(d.x1, d.x2, d.y, d.th); figPath(c, p); c.fillStyle = FC.blocked; c.fill(); c.lineWidth = 1; c.strokeStyle = '#7a6e64'; c.stroke(); });
+  /* legend lives in the page under the board so it never covers the drawing */
+  setLegend([['Copper (Cu)', FC.cu], ['Tungsten (W)', FC.w], ['SOD dielectric', FC.sod], ['Other nets (blocked)', FC.blocked], ['Silicon', FC.wafer]], o.extra || []);
+  g.legendBottom = 10;
+  return cvs;
+}
+
+/* layer names in the left gutter, like the side labels of the figure */
+function figLabels(c, g, specs) {
+  const narrow = g.narrow, rows = g.rows;
+  const put = (a, y, col, b) => {
+    c.textAlign = 'left'; c.textBaseline = 'middle';
+    c.fillStyle = col; c.fillRect(6, y - 8, 4, 16);
+    c.fillStyle = FC.ink; c.font = '600 ' + (narrow ? 11 : 13) + 'px ' + FD; c.fillText(a, 16, y - (b && !narrow ? 7 : 0));
+    if (b && !narrow) { c.fillStyle = '#5a6672'; c.font = '400 10px ' + FM; c.fillText(b, 16, y + 8); }
+  };
+  for (let r = 1; r < rows.length - 1; r++) {
+    const l = LAY[rows[r]], y = g.y(r);
+    put(narrow ? l.short : l.name, y, l.color, specs !== false ? 'W ' + fmtDim(l.W) + ' · T ' + fmtDim(l.T) : null);
+  }
+  put(narrow ? 'FET' : 'Transistor', g.yS - 8, '#00a9c9');
+}
+
+const lerpHex = (a, b, t) => { const p = h => [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16)); const x = p(a), y = p(b); return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join(''); };
+/* copper colour from cheap (light) to costly (deep red) */
+function heatCol(R, rmin, rmax) {
+  const t = Math.max(0, Math.min(1, Math.log(R / rmin) / Math.log(rmax / rmin)));
+  return t < 0.5 ? lerpHex('#ffb653', FC.cu, t * 2) : lerpHex(FC.cu, '#c4271b', (t - 0.5) * 2);
+}
+/* ---------- app core ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const cv = $('#cv'), ctx = cv.getContext('2d'), stage = $('#stage');
+const prof = $('#prof'), pctx = prof.getContext('2d'), I_MA = 0.25; /* transistor current, mA */
+const V = { W: 900, H: 500 };
+const RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const COL = { bg: '#f5f2ec', panel: '#ede9df', panel2: '#e4dfd3', line: '#d4cfc5', fg: '#1a2540', mute: '#6b6458', cu: '#c8401a', e: '#2a4a8a', good: '#2f7d55', bad: '#b00020', warn: '#b45309', gold: '#b88a00' };
+const FD = "'Outfit',system-ui,sans-serif", FM = "'DM Mono',ui-monospace,monospace";
+const fmtR = r => r < 1 ? (r * 1000).toFixed(0) + ' mΩ' : r < 10 ? r.toFixed(2) + ' Ω' : r < 100 ? r.toFixed(1) + ' Ω' : r.toFixed(0) + ' Ω';
+const fmtDim = v => v < 1 ? Math.round(v * 1000) + ' nm' : +v.toFixed(2) + ' µm';
+const fmtF = v => v.toFixed(1) + ' fF';
+
+function setLegend(items, extra) {
+  const el = document.getElementById('legend'); if (!el) return;
+  el.innerHTML = items.map(it => '<span><i style="background:' + it[1] + '"></i>' + it[0] + '</span>').join('') + extra.map(t => '<em>' + t + '</em>').join('');
+}
+function fitCanvas(H) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  V.W = Math.max(300, Math.floor(stage.clientWidth)); V.H = H;
+  cv.style.height = H + 'px'; cv.width = Math.round(V.W * dpr); cv.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+function fitProf() {
+  const dpr = Math.min(2, window.devicePixelRatio || 1), w = Math.max(300, Math.floor(stage.clientWidth));
+  prof.style.height = '140px'; prof.width = Math.round(w * dpr); prof.height = Math.round(140 * dpr); pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+/* waterfall of the voltage lost step by step along the path */
+function drawProfile(steps, o) {
+  if (prof.hidden) return;
+  const c = pctx, W = Math.floor(stage.clientWidth) || 900, H = 140, L = W < 640 ? 50 : 70, R = W - 16, T = 30, B = H - 34;
+  c.clearRect(0, 0, W, H); c.fillStyle = COL.panel; c.fillRect(0, 0, W, H);
+  const y = v => T + (1000 - v) / o.span * (B - T);
+  c.font = '500 11px ' + FM; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillStyle = COL.mute;
+  c.fillText('Voltage along the path', 14, 13);
+  [0, 0.5, 1].forEach(f => {
+    const v = 1000 - o.span * f, yy = y(v); c.strokeStyle = COL.line; c.lineWidth = 1; c.beginPath(); c.moveTo(L, yy); c.lineTo(R, yy); c.stroke();
+    c.textAlign = 'right'; c.fillStyle = COL.mute; c.font = '400 10px ' + FM; c.fillText(v.toFixed(0) + ' mV', L - 6, yy);
+  });
+  if (o.limit != null) {
+    const yy = y(1000 - o.limit); c.save(); c.setLineDash([6, 4]); c.strokeStyle = COL.warn; c.lineWidth = 1.5; c.beginPath(); c.moveTo(L, yy); c.lineTo(R, yy); c.stroke(); c.restore();
+    c.fillStyle = COL.warn; c.textAlign = 'right'; c.font = '500 10px ' + FM; c.fillText(o.limitLabel, R, yy - 8);
+  }
+  if (!steps.length) { c.textAlign = 'center'; c.fillStyle = COL.mute; c.font = '400 12px ' + FM; c.fillText(W < 640 ? 'Move to see voltage loss' : 'Move the marker to see where the voltage is lost.', (L + R) / 2, (T + B) / 2 + 14); }
+  const n = Math.max(o.slots || 0, steps.length, 1), bw = (R - L) / n; let v = 1000;
+  steps.forEach((s, i) => {
+    const x = L + i * bw + 3, w = Math.max(4, bw - 6), y1 = y(v), y2 = y(v - s.dv);
+    if (s.ghost != null) { c.save(); c.setLineDash([3, 3]); c.strokeStyle = COL.mute; c.lineWidth = 1; c.strokeRect(x + .5, y1, w - 1, y(v - s.ghost) - y1); c.restore(); }
+    c.fillStyle = s.col; c.fillRect(x, y1, w, Math.max(2, y2 - y1));
+    if (i < steps.length - 1) { c.strokeStyle = COL.mute; c.lineWidth = 1; c.beginPath(); c.moveTo(x + w, y2); c.lineTo(x + bw, y2); c.stroke(); }
+    if (bw >= 30) { c.fillStyle = COL.mute; c.font = '400 9px ' + FM; c.textAlign = 'center'; c.fillText(s.lab, x + w / 2, B + 12); }
+    v -= s.dv;
+  });
+  c.textAlign = 'right'; c.font = '600 12px ' + FM; c.fillStyle = o.ok ? COL.good : COL.fg; c.fillText(v.toFixed(0) + ' mV at the S/D contact', R, 13);
+}
+function pill(text, x, y, color) {
+  ctx.font = '500 11px ' + FM;
+  const w = ctx.measureText(text).width + 10;
+  ctx.fillStyle = 'rgba(245,242,236,.94)'; ctx.strokeStyle = color || COL.line; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(x - w / 2, y - 9, w, 18, 3); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = COL.fg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y + 0.5);
+}
+function distSeg(px, py, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy;
+  let t = l2 ? ((px - a.x) * dx + (py - a.y) * dy) / l2 : 0; t = Math.max(0, Math.min(1, t));
+  return Math.hypot(px - (a.x + t * dx), py - (a.y + t * dy));
+}
+
+/* ---------- levels ---------- */
+const MIX = [1, 1, 1, 0.6, 1.6];
+const LEVELS = [
+  { id: 'r1', mode: 'route', group: 'Route', name: 'Take the Highway', showAll: true,
+    cfg: { rows: ['PAD', 'CU5', 'CU3', 'TUN', 'TR'], cols: 4, layers: [1, 2, 3], seed: 11, mix: MIX, slack: 1.3 },
+    goal: 'Three bumps feed the same transistor through three separate paths, one per metal layer. Pick the bump whose path has the lowest resistance and stay under the budget.',
+    physics: '<h3>Why it works</h3><p>A wire’s resistance depends on its cross-section:</p><p><span class="fx">R = ρ · L / (W · T)</span></p><p>Cu 5 is thick and wide, so it carries current across the die almost for free. Cu 2 and the tungsten local layer are thin, so every micron costs far more. Travel sideways high up and drop down as late as you can.</p><p>A via, a wire and the next via are in series, so their resistances simply add, in any order. What really changes the answer is which path you are on. The three paths here are in parallel: the current splits between them in inverse proportion to their resistance (Kirchhoff), so the transistor always sees less than your best single path.</p>' },
+  { id: 'r2', mode: 'route', group: 'Route', name: 'Via Tax', showAll: false,
+    cfg: { rows: ['PAD', 'CU5', 'CU4', 'CU2', 'TUN', 'TR'], cols: 5, layers: [1, 2, 4], seed: 21, mix: MIX, slack: 1.2 },
+    goal: 'Three bumps, three paths on different layers. Some wires are narrow and some vias are doubled. Costs now show only next to the marker, so compare the paths by what you know about the layers.',
+    physics: '<h3>Why it works</h3><p>Vias add resistance too, and the ones near the transistor (the Cu 1 via and the tungsten contact plug) are the worst. A double via puts two in parallel and cuts the cost to about 55 %. A narrow wire (thin line) costs more than a wide one on the same layer.</p><p><span class="fx">R(via) ≈ R₁ / n<sub>eff</sub> &nbsp; n<sub>eff</sub> = n / (1 + 0.1(n − 1))</span></p><p>A detour on a thick layer can beat a short hop that forces an extra via.</p>' },
+  { id: 'r3', mode: 'route', group: 'Route', name: 'Bump to Drain', showAll: false,
+    cfg: { rows: ['PAD', 'CU5', 'CU4', 'CU3', 'CU2', 'TUN', 'TR'], cols: 6, layers: [1, 3, 5], seed: 31, mix: MIX, slack: 1.12 },
+    goal: 'The full stack from the figure: lead-free solder bump, Cu 5 down to Cu 2, the Cu 1 via, tungsten, and the contact into the transistor.',
+    physics: '<h3>Why it works</h3><p>Current enters from the lead-free solder bump through the under-bump liners into Cu 5, steps down through Cu 4, Cu 3 and Cu 2, crosses a Cu 1 via into the tungsten local layer, and finally enters the source or drain through a tungsten contact plug. The upper levels are thick and cheap. The lower ones are thin and resistive, and the contact plug is the largest single via, which is why the budget is tight.</p>' },
+  { id: 'r4', mode: 'route', group: 'Route', name: 'Dead End', showAll: false,
+    cfg: { rows: ['PAD', 'CU5', 'CU4', 'CU3', 'CU2', 'TUN', 'TR'], cols: 7, layers: [1, 2, 3], blocked: [2], seed: 41, mix: MIX, slack: 1.1, close: [1.1, 3.5] },
+    goal: 'The top-layer track of one path is cut, so that path is a dead end. Find the best of the paths that still conduct. Costs show only next to the marker.',
+    physics: '<h3>Why it works</h3><p>Resistance per micron falls fast as you go up the stack, so a longer path on a thick, upper layer can beat a shorter path on a thin one. The cheapest route is a trade between wire length, wire width and the number of vias you have to cross.</p><p><span class="fx">R(path) = \u03A3 R(wire) + \u03A3 R(via)</span></p><p>Each via is a fixed toll, so a detour that saves wire resistance but adds two vias only pays if the wire saving is larger than both tolls.</p>' },
+  { id: 'r5', mode: 'route', group: 'Route', name: 'Narrow Escape', showAll: false,
+    cfg: { rows: ['PAD', 'CU5', 'CU4', 'CU3', 'CU2', 'TUN', 'TR'], cols: 6, layers: [1, 2, 3], blocked: [2], seed: 51, mix: [0.6, 0.6, 1, 1.6], slack: 1.08, close: [1.03, 1.5] },
+    goal: 'Most wires are drawn narrow. Costs are hidden except next to you, and the budget is tight. A double via can be the cheapest way down.',
+    physics: '<h3>Why it works</h3><p>A narrow wire (thin line) at 0.6\u00D7 width has about 1.7\u00D7 the resistance of a normal one, and a wire at 1.6\u00D7 width has about 0.6\u00D7. Two vias in parallel between the same two layers have about 55 % of the resistance of one: the current splits between the two, but crowds into the nearer one.</p><p><span class="fx">R(n vias) \u2248 R\u2081 / n<sub>eff</sub> &nbsp; n<sub>eff</sub> = n / (1 + 0.1(n \u2212 1)) &nbsp; R(wire) = \u03C1L / (m \u00B7 W \u00B7 T)</span></p>' },
+  { id: 'w1', mode: 'widen', group: 'Widen', name: 'Thin Neck', budget: 14, slack: 1.1,
+    chain: [
+      { t: 'wire', l: 'CU5', L: 600, step: 4 }, { t: 'via', to: 'CU4', step: 1 },
+      { t: 'wire', l: 'CU4', L: 120, step: 3 }, { t: 'via', to: 'CU3', step: 1 },
+      { t: 'wire', l: 'CU3', L: 40, step: 2 }, { t: 'via', to: 'CU2', step: 1 },
+      { t: 'wire', l: 'CU2', L: 20, step: 1 }, { t: 'via', to: 'TUN', step: 1 },
+      { t: 'wire', l: 'TUN', L: 8, step: 1 }, { t: 'via', to: 'TR', step: 1 }],
+    goal: 'Current flows down one path from the supply to the transistor. Tap a wire to widen it, tap a via to add a parallel via. Red shows where the voltage is being lost. Routing area is limited.',
+    physics: '<h3>Why it works</h3><p>Widening a wire to m times its width divides its resistance by m. Parallel vias do the same for a via. Both consume area, and area is the budget.</p><p><span class="fx">R(wire) = ρ · L / (m · W · T)</span></p><p>The long Cu 5 wire looks big but contributes only a few ohms. The short, thin tungsten and Cu 2 segments near the transistor hold most of the resistance, so that is where area pays off.</p>' },
+  { id: 'w2', mode: 'widen', group: 'Widen', name: 'Long Haul', budget: 11, slack: 1.1,
+    chain: [
+      { t: 'wire', l: 'CU5', L: 3000, step: 4 }, { t: 'via', to: 'CU4', step: 1 },
+      { t: 'wire', l: 'CU4', L: 400, step: 3 }, { t: 'via', to: 'CU3', step: 1 },
+      { t: 'wire', l: 'CU3', L: 100, step: 2 }, { t: 'via', to: 'CU2', step: 1 },
+      { t: 'wire', l: 'CU2', L: 40, step: 1 }, { t: 'via', to: 'TUN', step: 1 },
+      { t: 'wire', l: 'TUN', L: 15, step: 1 }, { t: 'via', to: 'TR', step: 2 }],
+    goal: 'A long Cu 5 strap feeds the same stack. It looks expensive, so check the heat map before you spend area on it.',
+    physics: '<h3>Why it works</h3><p>Length alone does not decide where resistance lives. Compare resistance per micron: a Cu 5 line is a few hundredths of an ohm per micron, a tungsten line is several ohms per micron. Spend area where the resistance is, not where the line looks long.</p>' },
+  { id: 'w3', mode: 'widen', group: 'Widen', name: 'Via Array', budget: 8, slack: 1.1,
+    chain: [
+      { t: 'wire', l: 'CU5', L: 200, step: 4 }, { t: 'via', to: 'CU4', step: 1 },
+      { t: 'wire', l: 'CU4', L: 40, step: 3 }, { t: 'via', to: 'CU3', step: 1 },
+      { t: 'wire', l: 'CU3', L: 20, step: 2 }, { t: 'via', to: 'CU2', step: 1 },
+      { t: 'wire', l: 'CU2', L: 10, step: 1 }, { t: 'via', to: 'TUN', step: 1 },
+      { t: 'wire', l: 'TUN', L: 4, step: 1 }, { t: 'via', to: 'TR', step: 1 }],
+    goal: 'The wires here are short, so most of the resistance hides in the vias. Add vias in parallel between the same two layers where the heat map is reddest.',
+    physics: '<h3>Why it works</h3><p>Parallel vias between the same two layers share the current. Ideally two identical vias give half the resistance and three a third, but current crowds into the nearest via and the landing wire adds spreading resistance, so real arrays give about 0.55\u00D7 and 0.4\u00D7:</p><p><span class="fx">R(n vias) \u2248 R\u2081 / n<sub>eff</sub> &nbsp; n<sub>eff</sub> = n / (1 + 0.1(n \u2212 1))</span></p><p>Each extra via costs only a little area, so a via array is usually the cheapest way to cut resistance when the vias dominate. The gain shrinks as n grows: going from 1 to 2 vias saves half of R\u2081, going from 3 to 4 saves only a twelfth.</p>' },
+  { id: 'w4', mode: 'widen', group: 'Widen', name: 'Tight Budget', budget: 9, slack: 1.06,
+    chain: [
+      { t: 'wire', l: 'CU5', L: 1500, step: 4 }, { t: 'via', to: 'CU4', step: 1 },
+      { t: 'wire', l: 'CU4', L: 200, step: 3 }, { t: 'via', to: 'CU3', step: 1 },
+      { t: 'wire', l: 'CU3', L: 60, step: 2 }, { t: 'via', to: 'CU2', step: 1 },
+      { t: 'wire', l: 'CU2', L: 20, step: 1 }, { t: 'via', to: 'TUN', step: 1 },
+      { t: 'wire', l: 'TUN', L: 6, step: 1 }, { t: 'via', to: 'TR', step: 2 }],
+    goal: 'Both wires and vias matter now, and the area budget is small. The target is tight, so spend every unit where it removes the most resistance.',
+    physics: '<h3>Why it works</h3><p>With a fixed budget, the best allocation puts the next unit of area where it saves the most ohms per unit. The saving from one more step on an element with base resistance R\u2080 is</p><p><span class="fx">\u0394R = R\u2080 \u00B7 (1/m \u2212 1/(m+1))</span></p><p>That shrinks quickly as m grows, so a big, expensive element is often not the best place to spend. Compare ohms saved per unit of area before each step.</p>' },
+  { id: 's1', mode: 'space', group: 'Space', name: 'Breathing Room',
+    Wc: 360, smin: 20, T: 80, Lw: 100, Cg: 0.05, start: [30, 20, 60, 130],
+    wires: [{ t: 'A', w: 40, n: 'DATA' }, { t: 'V', w: 40, n: 'CLK' }, { t: 'A', w: 40, n: 'DATA' }],
+    goal: 'The clock wire is squeezed between two noisy data wires. Drag wires sideways to cut its capacitance under the target. Wires push their neighbors.',
+    physics: '<h3>Why it works</h3><p>Two neighboring sidewalls form a capacitor. To first order it is a parallel plate, and fringing fields add to it:</p><p><span class="fx">C ≈ ε · T · L / S &nbsp; (fitted: C ∝ S<sup>−1.34</sup>)</span></p><p>Halve the spacing and the coupling more than doubles. The channel width is fixed, so extra space for one wire must come from somewhere else. Put it next to the wire that matters.</p>' },
+  { id: 's2', mode: 'space', group: 'Space', name: 'Shield Wall',
+    Wc: 560, smin: 20, T: 80, Lw: 100, Cg: 0.05, start: [20, 20, 100, 20, 20, 20, 120],
+    wires: [{ t: 'A', w: 40, n: 'DATA' }, { t: 'V', w: 40, n: 'CLK' }, { t: 'A', w: 40, n: 'DATA' }, { t: 'G', w: 40, n: 'GND' }, { t: 'V', w: 40, n: 'SENSE' }, { t: 'A', w: 40, n: 'DATA' }],
+    goal: 'Two sensitive wires, three noisy neighbors and one grounded shield. Keep the worst sensitive wire under the target.',
+    physics: '<h3>Why it works</h3><p>When a neighbor switches the opposite way, its coupling capacitor charges twice (the Miller effect), so a noisy neighbor counts double. A quiet or grounded neighbor counts once. A shield next to a sensitive wire halves that side’s penalty, but it also takes width from the channel.</p>' },
+  { id: 's3', mode: 'space', group: 'Space', name: 'Add a Shield', shields: 2,
+    Wc: 700, smin: 20, T: 80, Lw: 100, Cg: 0.02, start: 'packed',
+    wires: [{ t: 'A', w: 40, n: 'DATA' }, { t: 'V', w: 40, n: 'CLK' }, { t: 'A', w: 40, n: 'DATA' }],
+    goal: 'Pick + GND or + VDD, then tap a gap to insert a supply wire. You can add 2. Supply wires are AC ground, so they count once instead of twice.',
+    physics: '<h3>Why it works</h3><p>A VDD or GND wire does not switch, so the coupling to it is not doubled by the Miller effect. A shield next to the sensitive wire can sit at half the spacing of a noisy neighbor for the same capacitance. It only pays off when there is room: the shield itself uses width.</p><p><span class="fx">Aggressor: 2 \u00B7 \u03B5TL/S &nbsp; Shield: 1 \u00B7 \u03B5TL/S</span></p>' },
+  { id: 's4', mode: 'space', group: 'Space', name: 'Two Victims', shields: 2,
+    Wc: 900, smin: 20, T: 80, Lw: 100, Cg: 0.02, start: 'packed',
+    wires: [{ t: 'A', w: 40, n: 'DATA' }, { t: 'V', w: 40, n: 'CLK' }, { t: 'A', w: 40, n: 'DATA' }, { t: 'V', w: 40, n: 'SENSE' }],
+    goal: 'Two sensitive wires and only two supply wires to spend. Decide which gaps deserve a shield and which just need space.',
+    physics: '<h3>Why it works</h3><p>Shields and free space are two ways to spend the same channel width. A wire that touches two noisy neighbors benefits most from a shield. A wire that already sits at the channel edge may only need distance.</p>' },
+  { id: 's5', mode: 'space', group: 'Space', name: 'Power Grid', shields: 3,
+    Wc: 1300, smin: 20, T: 80, Lw: 100, Cg: 0.02, start: 'packed',
+    wires: [{ t: 'A', w: 40, n: 'DATA' }, { t: 'V', w: 40, n: 'CLK' }, { t: 'A', w: 40, n: 'DATA' }, { t: 'V', w: 40, n: 'SENSE' }, { t: 'A', w: 40, n: 'DATA' }],
+    goal: 'Three supply wires, five signals, two sensitive wires. A mix of VDD and GND is allowed. Try putting a rail between every sensitive wire and a noisy one.',
+    physics: '<h3>Why it works</h3><p>Real power grids interleave VDD and GND rails with signals for exactly this reason: both rails are AC ground, and together they also form a decoupling capacitor between the supplies. Each rail costs routing width, so the number you can afford is limited.</p>' },
+  { id: 's6', mode: 'space', group: 'Space', name: 'Busy Channel', shields: 3,
+    Wc: 1500, smin: 20, T: 80, Lw: 100, Cg: 0.02, start: 'packed',
+    wires: [{ t: 'A', w: 40, n: 'DATA' }, { t: 'V', w: 40, n: 'CLK' }, { t: 'A', w: 40, n: 'DATA' }, { t: 'A', w: 40, n: 'DATA' }, { t: 'V', w: 40, n: 'SENSE' }, { t: 'A', w: 40, n: 'DATA' }],
+    goal: 'Six signals, two sensitive, three rails. Two noisy wires sit side by side. Find where the rails and the free space do the most good.',
+    physics: '<h3>Why it works</h3><p>Two aggressors next to each other do not hurt each other\u2019s victims, so they need no shield between them. Spend the rails on gaps that touch a sensitive wire, then spread the remaining width so that no sensitive wire is squeezed.</p>' },
+  { id: 's7', mode: 'space', group: 'Space', name: 'Wide Bus', shields: 0,
+    Wc: 760, smin: 20, T: 80, Lw: 100, Cg: 0.03, start: 'packed',
+    wires: [{ t: 'A', w: 40, n: 'DATA' }, { t: 'A', w: 40, n: 'DATA' }, { t: 'V', w: 40, n: 'CLK' }, { t: 'A', w: 40, n: 'DATA' }, { t: 'A', w: 40, n: 'DATA' }, { t: 'V', w: 40, n: 'SENSE' }, { t: 'A', w: 40, n: 'DATA' }],
+    goal: 'A bus of seven wires, two of them sensitive, with no room for shields. Share the spare width so that neither sensitive wire is squeezed.',
+    physics: '<h3>Why it works</h3><p>Coupling capacitance falls at least as fast as 1/S, so the first nanometers of extra spacing help the most. A wire with a noisy neighbor on each side pays twice, so it needs more room than one at the edge of the channel, where it has only one neighbor.</p><p><span class="fx">C \u221D S<sup>\u22121.34</sup></span></p>' },
+  { id: 's8', mode: 'space', group: 'Space', name: 'Fat Clock', shields: 0,
+    Wc: 720, smin: 20, T: 80, Lw: 100, Cg: 0.04, start: 'packed',
+    wires: [{ t: 'A', w: 40, n: 'DATA' }, { t: 'V', w: 80, n: 'CLK' }, { t: 'A', w: 40, n: 'DATA' }, { t: 'G', w: 60, n: 'GND' }, { t: 'V', w: 40, n: 'SENSE' }, { t: 'A', w: 40, n: 'DATA' }],
+    goal: 'The clock is drawn twice as wide to keep its resistance low, so it takes more of the channel. A fixed ground wire already sits next to the sense line. Place the wires so both sensitive wires stay under the target.',
+    physics: '<h3>Why it works</h3><p>Wire width does not change the sidewall coupling capacitance, which depends on thickness, length and spacing. A wider wire takes more of the fixed channel, so there is less width left over for spacing. Wider wires buy lower resistance and pay in spacing.</p><p><span class="fx">C(sidewall) = \u03B5 \u00B7 T \u00B7 L / S</span></p>' },
+  { id: 's9', mode: 'space', group: 'Space', name: 'One Rail', shields: 1,
+    Wc: 800, smin: 20, T: 80, Lw: 100, Cg: 0.02, start: 'packed',
+    wires: [{ t: 'A', w: 40, n: 'DATA' }, { t: 'V', w: 40, n: 'CLK' }, { t: 'A', w: 40, n: 'DATA' }, { t: 'V', w: 40, n: 'SENSE' }, { t: 'A', w: 40, n: 'DATA' }],
+    goal: 'Two sensitive wires and one supply rail. A rail between two sensitive wires protects both. The question is whether that is the best use of it.',
+    physics: '<h3>Why it works</h3><p>A supply rail between two wires is shared: it counts once for each neighbor. Placing it between the two sensitive wires protects both sides, but the outer sides of each sensitive wire still face noisy neighbors. Compare the options by the worst sensitive wire, not the average.</p>' },
+  { id: 'b1', mode: 'lab', group: 'Lab', name: 'Fixed Pitch', type: 'rc',
+    cfg: { P: 200, T: 200, h: 200, L: 1000, k: 2.9, size: false },
+    controls: [{ id: 'W', label: 'Wire width', unit: ' nm', min: 40, max: 160, step: 5, init: 60 }],
+    goal: 'The tracks are laid out on a fixed 200 nm pitch. A wider wire has lower resistance but leaves less space to its neighbors. Find the width with the shortest delay.',
+    physics: '<h3>Why it works</h3><p>On a fixed pitch P, widening the wire narrows the gap to its neighbors, so resistance falls while capacitance rises. The delay of a long wire is set by their product:</p><p><span class="fx">R = ρL/(W·T) &nbsp; C = C<sub>g</sub> + 2·(Miller 2)·C<sub>c</sub>(S) &nbsp; delay ≈ 0.38·R·C</span></p><p>The best width is where the falling R and the rising C balance. Beyond it, extra width makes the wire slower, not faster.</p>',
+    win: 'Resistance and capacitance pull in opposite directions, so the fastest wire is neither the widest nor the one with the most space.' },
+  { id: 'b2', mode: 'lab', group: 'Lab', name: 'Thin Wire Tax', type: 'rc',
+    cfg: { P: 140, T: 180, h: 180, L: 1000, k: 2.9, size: true },
+    controls: [{ id: 'W', label: 'Wire width', unit: ' nm', min: 30, max: 110, step: 5, init: 100 }, { id: 'tb', label: 'Barrier thickness', unit: ' nm', min: 1, max: 4, step: 0.5, init: 4 }],
+    goal: 'At these widths copper is slower than the textbook formula says. A liner (barrier) must stop copper from diffusing into the dielectric, but it takes room that the copper could use. Find the fastest safe design.',
+    physics: '<h3>Why it works</h3><p>Two effects make narrow copper wires worse than ρL/(WT). Electrons scatter off the surfaces and grain boundaries, so the resistivity rises as the wire gets thinner. And the TaN/Ta liner is a poor conductor of fixed thickness, so it takes a larger share of a small cross-section.</p><p><span class="fx">R = ρ(W)·L / ((W − 2t)·(T − t))</span></p><p>The liner must be at least about 2 nm to stop diffusion. Anything thicker only costs resistance.</p>',
+    win: 'The textbook estimate is optimistic for narrow copper. Surface scattering and the liner raise the real resistance, so the same layout is much slower.' },
+  { id: 'b3', mode: 'lab', group: 'Lab', name: 'Low-k Budget', type: 'rc',
+    cfg: { P: 200, T: 200, h: 200, L: 1000, size: false, budget: 3, kTable: [3.9, 3.5, 3.0, 2.5, 2.0], pen: [0, 0.03, 0.08, 0.40, 0.80], names: ['SiO₂', 'FSG', 'SiCOH', 'Porous SiCOH', 'Air gap'] },
+    controls: [{ id: 'W', label: 'Wire width', unit: ' nm', min: 40, max: 160, step: 5, init: 60 }, { id: 'd', label: 'Dielectric', unit: '', min: 0, max: 4, step: 1, init: 0, fmt: 'dielectric' }],
+    goal: 'A lower dielectric constant cuts capacitance, but each step costs process complexity: you can afford a rating of 3. The softer films also damage the copper interface. Pick the dielectric and width with the shortest delay.',
+    physics: '<h3>Why it works</h3><p>Capacitance scales with the dielectric constant k, so a lower-k insulator speeds up the wire for free… until the film itself gets in the way. Porous and air-gap films are mechanically weak, need thicker sealing liners and are easily damaged by etching, which raises the effective resistance and the effective k.</p><p><span class="fx">delay ∝ k · (1 + penalty)</span></p><p>Past a point, the penalty grows faster than k falls.</p>',
+    win: 'The lowest k is not automatically best: the integration penalties of the softest films can eat the gain.' },
+  { id: 'b4', mode: 'lab', group: 'Lab', name: 'Electromigration', type: 'em',
+    cfg: { I: 0.5, Tc: 105, T: 200, via: 100, years: 10, tref: 10, Jw: 2.0, Jv: 4.0, sigma: 0.3, z: 3.09, Ea: 0.9, n: 2 },
+    controls: [{ id: 'W', label: 'Wire width', unit: ' nm', min: 100, max: 500, step: 20, init: 100 }, { id: 'n', label: 'Vias in parallel', unit: '', min: 1, max: 6, step: 1, init: 1 }],
+    goal: 'The wire carries 0.5 mA and must last 10 years at 105 °C. Current density wears out the wire and the vias. Find the smallest design that lives long enough.',
+    physics: '<h3>Why it works</h3><p>Moving electrons push copper atoms along the wire, which opens voids over time (electromigration). Black’s equation links lifetime to current density J and temperature:</p><p><span class="fx">MTTF = A · J<sup>−n</sup> · e<sup>Eₐ/kT</sup> &nbsp; J = I / (W·T)</span></p><p>Doubling the current density cuts the lifetime to a quarter. Vias have the smallest cross-section, so a parallel array both lowers the resistance and spreads the current. The chain is only as good as its weakest link.</p><p>The lifetime shown is the early-failure tail, not the median. Lifetimes are lognormally spread (σ ≈ 0.3), so a spec of 0.1 % failures is t<sub>0.1%</sub> = t<sub>50</sub> · e<sup>−3.09σ</sup>, about 0.4 of the median.</p>',
+    win: 'Lifetime depends on current density squared, so a small increase in width or via count gives a large increase in life. The weakest link sets the limit.' },
+  { id: 'b5', mode: 'lab', group: 'Lab', name: 'Hot Chip', type: 'em',
+    cfg: { I: 0.4, Tc: 125, T: 200, via: 100, years: 10, tref: 10, Jw: 2.0, Jv: 4.0, sigma: 0.3, z: 3.09, Ea: 0.9, n: 2 },
+    controls: [{ id: 'W', label: 'Wire width', unit: ' nm', min: 100, max: 500, step: 20, init: 100 }, { id: 'n', label: 'Vias in parallel', unit: '', min: 1, max: 6, step: 1, init: 1 }],
+    goal: 'The same job on a hotter chip: 0.4 mA at 125 °C. Heat speeds up atom motion, so the same current is far more damaging. Find the smallest design that still lasts 10 years.',
+    physics: '<h3>Why it works</h3><p>The exponential term in Black’s equation is a thermal activation: diffusion speeds up with temperature, so lifetime drops.</p><p><span class="fx">MTTF ∝ exp(Eₐ / kT)</span></p><p>With an activation energy near 0.9 eV, going from 105 °C to 125 °C cuts the lifetime by about four times at the same current density. To get it back you need lower current density: a wider wire and more parallel vias.</p>',
+    win: 'Temperature matters as much as current. A hot spot needs a bigger wire or via array than the same wire on a cool part of the chip.' },
+  { id: 'b6', mode: 'lab', group: 'Lab', name: 'Repeaters', type: 'rep',
+    cfg: { L: 10000, r: 0.05, c: 0.2, Rd: 300, Cin: 20, tp: 12, area: null },
+    controls: [{ id: 'N', label: 'Repeaters', unit: '', min: 0, max: 15, step: 1, init: 0 }],
+    goal: 'A 10 mm wire is far too slow on its own. Break it into pieces with repeaters (buffers). Each one restores the signal but adds its own delay. Find the number that gives the shortest total delay.',
+    physics: '<h3>Why it works</h3><p>The delay of a wire grows with the square of its length, because both its resistance and its capacitance grow with length:</p><p><span class="fx">delay ≈ 0.38 · r · c · L²</span></p><p>Splitting it into N+1 equal pieces cuts the quadratic term by N+1, but every repeater adds a fixed delay and load. The total has a minimum at an intermediate number of repeaters.</p>',
+    win: 'Repeaters turn a quadratic delay into a linear one. Too few leave the wire slow, too many add more gate delay than they remove.' },
+  { id: 'b7', mode: 'lab', group: 'Lab', name: 'Sized Repeaters', type: 'rep',
+    cfg: { L: 10000, r: 0.05, c: 0.2, Rd: 300, Cin: 20, tp: 12, area: 24 },
+    controls: [{ id: 'N', label: 'Repeaters', unit: '', min: 0, max: 12, step: 1, init: 0 }, { id: 'h', label: 'Repeater size', unit: '×', vals: [1, 2, 3, 4, 6, 8, 10, 12, 16], init: 0 }],
+    goal: 'Now you can also size the repeaters, but the total area (number × size) is limited to 24. Bigger repeaters drive harder but load the previous stage. Find the best mix.',
+    physics: '<h3>Why it works</h3><p>A repeater h times larger has h times lower output resistance and h times larger input capacitance. It drives its wire faster, but it also loads the stage before it.</p><p><span class="fx">R<sub>d</sub> = R<sub>0</sub>/h &nbsp; C<sub>in</sub> = h·C<sub>0</sub> &nbsp; area = N · h</span></p><p>With a fixed area, more repeaters means smaller ones. The best split balances the wire delay against the repeater loading.</p>',
+    win: 'Count and size trade against each other under an area budget. The best design is rarely the maximum of either.' },
+];
+const MODE_LABEL = { route: 'Adventure 1 · Find the path · Resistance', widen: 'Adventure 2 · Size the wires · Resistance', space: 'Adventure 3 · Space the wires · Capacitance', lab: 'Adventure 4 · Balance the trade-offs · Delay and lifetime' };
+const GROUPS = [
+  ['Route', 'Find the path', 'Choose the cheapest way down the metal stack to the transistor.'],
+  ['Widen', 'Size the wires', 'Widen wires and add vias where the voltage is being lost.'],
+  ['Space', 'Space the wires', 'Move wires apart or add shields to cut capacitance between neighbors.'],
+  ['Lab', 'Balance the trade-offs', 'Tune width, dielectric, vias and repeaters where speed, size and lifetime pull against each other.']
+];
+
+/* ---------- progress ---------- */
+let stars = {};
+try { localStorage.removeItem('beol-runner'); } catch (e) { /* old saved stars from earlier versions */ }
+try { stars = JSON.parse(sessionStorage.getItem('edu-game') || '{}') || {}; } catch (e) { stars = {}; }
+function saveStars(id, n) {
+  if ((stars[id] || 0) >= n) return;
+  stars[id] = n;
+  try { sessionStorage.setItem('edu-game', JSON.stringify(stars)); } catch (e) { /* storage unavailable */ }
+  renderRail();
+}
+const starStr = n => '<b>' + '★'.repeat(n) + '</b>' + '★'.repeat(3 - n);
+
+let curLevel = 0, M = null, hintUntil = 0;
+function renderRail() {
+  const tot = LEVELS.reduce((a, L) => a + (stars[L.id] || 0), 0);
+  $('#score').innerHTML = 'Stars this session <b>' + tot + ' / ' + LEVELS.length * 3 + '</b>';
+  const rail = $('#rail'); rail.innerHTML = '';
+  GROUPS.forEach(([gp, title, blurb], gi) => {
+    const row = document.createElement('div'); row.className = 'grp'; let lvn = 0;
+    row.innerHTML = '<span class="gl"><em>Adventure ' + (gi + 1) + '</em><b>' + title + '</b><i>' + blurb + '</i></span>';
+    LEVELS.forEach((L, i) => {
+      if (L.group !== gp) return;
+      const b = document.createElement('button'); b.type = 'button';
+      b.className = 'lv' + (i === curLevel ? ' on' : '');
+      b.innerHTML = '<span>' + (gi + 1) + '.' + (++lvn) + ' ' + L.name + '</span><span class="st">' + starStr(stars[L.id] || 0) + '</span>';
+      b.addEventListener('click', () => startLevel(i));
+      row.appendChild(b);
+    });
+    rail.appendChild(row);
+  });
+}
+try { if (window.innerWidth < 700) document.getElementById('how').open = false; } catch (e) { /* keep default */ }
+function setMeters(html) { $('#meters').innerHTML = html; }
+function meter(label, value, extra, pct, color, mark) {
+  return '<div class="m"><div class="mh"><span>' + label + '</span><b>' + value + (extra ? ' <i>' + extra + '</i>' : '') + '</b></div><div class="bar"><span style="width:' + Math.max(0, Math.min(100, pct * 100)).toFixed(1) + '%;background:' + color + '"></span>' + (mark != null ? '<u style="left:' + (mark * 100).toFixed(1) + '%"></u>' : '') + '</div></div>';
+}
+function setReadout(html) { $('#readout').innerHTML = html; }
+let shownStars = 0;
+function hideWin() { const w = $('#win'); if (w) w.hidden = true; }
+/* a clear success message over the board, so the player does not have to scroll to the result card */
+function showWin(n, title) {
+  const L = LEVELS[curLevel], last = curLevel >= LEVELS.length - 1, w = $('#win');
+  const kick = n === 3 ? 'Perfect' : n === 2 ? 'Well done' : 'Level complete';
+  const msg = n === 3 ? 'That is the best result possible for this level.' : n === 2 ? 'Close to the best. Can you get all three stars?' : 'You made it. Can you find a better one?';
+  w.innerHTML = '<div class="wk">Success</div><h3>' + kick + '!</h3><div class="ws">' + '\u2605'.repeat(n) + '<s>' + '\u2605'.repeat(3 - n) + '</s></div><p><b>' + L.name + '</b> \u00B7 ' + title + '</p><p>' + msg + '</p>' +
+    '<div class="wb"><button class="btn pri" id="wNext" type="button">' + (last ? 'Play again' : 'Next level') + '</button><button class="btn" id="wStay" type="button">Keep exploring</button></div>';
+  w.style.top = (cv.offsetTop + Math.min(cv.offsetHeight * 0.3, 190)) + 'px';
+  w.hidden = false;
+  $('#wNext').addEventListener('click', () => startLevel((curLevel + 1) % LEVELS.length));
+  $('#wStay').addEventListener('click', hideWin);
+}
+function clearResult() { $('#result').innerHTML = ''; $('#bNext').hidden = true; hideWin(); }
+function showResult(n, title, body, bad) {
+  const s = n ? '★'.repeat(n) + '<s>' + '★'.repeat(3 - n) + '</s>' : '';
+  $('#result').innerHTML = '<div class="res' + (bad ? ' bad' : '') + '">' + (n ? '<div class="stars">' + s + '</div>' : '') + '<strong>' + title + '</strong>' + body + '</div>';
+  if (!bad) { $('#bNext').hidden = false; $('#bNext').textContent = curLevel < LEVELS.length - 1 ? 'Next level' : 'Play again'; if (n > shownStars) { shownStars = n; showWin(n, title); } }
+}
+function breakdownHTML(items) {
+  const tot = items.reduce((a, b) => a + b[1], 0) || 1;
+  const mx = Math.max(...items.map(i => i[1]), 1e-9);
+  return '<div class="bk">' + items.map(i => '<div><span>' + i[0] + '</span><span class="b" style="width:' + (i[1] / mx * 100).toFixed(0) + '%"></span><b>' + fmtR(i[1]) + ' · ' + Math.round(i[1] / tot * 100) + '%</b></div>').join('') + '</div>';
+}
+
+function setTools(list, cur, cb) {
+  const box = $('#tools'); box.innerHTML = '';
+  list.forEach(t => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn tool'; b.textContent = t.label;
+    b.setAttribute('aria-pressed', t.id === cur ? 'true' : 'false'); b.disabled = !!t.off;
+    b.addEventListener('click', () => cb(t.id)); box.appendChild(b);
+  });
+}
+function startLevel(i) {
+  shownStars = 0; hideWin();
+  curLevel = i; const L = LEVELS[i];
+  M = L.mode === 'route' ? Route : L.mode === 'widen' ? Widen : L.mode === 'lab' ? Lab : Space;
+  $('#hMode').textContent = MODE_LABEL[L.mode]; $('#hTitle').textContent = L.name; $('#hGoal').textContent = L.goal;
+  $('#physics').innerHTML = L.physics;
+  $('#bUndo').hidden = L.mode !== 'route'; $('#bHint').hidden = false;
+  cv.classList.toggle('drag', L.mode === 'widen' || L.mode === 'space');
+  prof.hidden = L.mode === 'space' || L.mode === 'lab'; if (!prof.hidden) fitProf();
+  $('#tools').innerHTML = ''; $('#labctl').hidden = L.mode !== 'lab'; clearResult(); setReadout('');
+  M.init(L); renderRail();
+}
+$('#bReset').addEventListener('click', () => M && M.reset());
+$('#bUndo').addEventListener('click', () => M && M.undo && M.undo());
+$('#bHint').addEventListener('click', () => M && M.hint && M.hint());
+$('#bNext').addEventListener('click', () => startLevel((curLevel + 1) % LEVELS.length));
+
+/* canvas pointer + keyboard routing */
+const cpos = ev => { const r = cv.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; };
+cv.addEventListener('pointerdown', ev => { if (!M || !M.down) return; const p = cpos(ev); if (M !== Route) cv.setPointerCapture(ev.pointerId); M.down(p.x, p.y, ev); });
+cv.addEventListener('pointermove', ev => { if (!M || !M.move) return; const p = cpos(ev); M.move(p.x, p.y); });
+cv.addEventListener('contextmenu', ev => { if (M && M.alt) { ev.preventDefault(); const p = cpos(ev); M.alt(p.x, p.y); } });
+cv.addEventListener('pointerup', () => { if (M && M.up) M.up(); });
+cv.addEventListener('pointercancel', () => { if (M && M.up) M.up(); });
+window.addEventListener('keydown', ev => {
+  if (!M || !M.key || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+  const t = ev.target && ev.target.tagName;
+  if (t === 'INPUT' || t === 'TEXTAREA') return;
+  if (M.key(ev)) ev.preventDefault();
+});
+let rsz = 0;
+window.addEventListener('resize', () => { clearTimeout(rsz); rsz = setTimeout(() => { if (M && M.height) { fitCanvas(M.height()); if (!prof.hidden) fitProf(); } }, 80); });
+(function loop(t) { if (M && M.draw) M.draw(t); requestAnimationFrame(loop); })(0);
+
+/* ---------- mode 1: route the current ---------- */
+const Route = {
+  height() { return figGeo(Math.floor(stage.clientWidth) || 900, this.g.rows).H; },
+  init(L) {
+    this.L = L; this.g = genRoute3(L.cfg); this.rmin = undefined; this.sceneKey = '';
+    this.opt = this.g.opt; this.budget = Math.ceil(this.opt * L.cfg.slack / 5) * 5;
+    fitCanvas(this.height()); this.reset();
+  },
+  reset() {
+    this.cur = this.g.start; this.hist = []; this.spent = 0; this.anim = null; this.state = 'play';
+    this.hinted = false; this.hintE = null; this.hover = null; this.showAll = this.L.showAll;
+    clearResult(); this.upd();
+    setReadout('Pick one of the three bumps (tap it, or use the arrow keys). Each bump feeds its own path to the same transistor. Tap any wire to read its resistance.');
+  },
+  layout() {
+    const g = this.g, W = V.W, geo = figGeo(W, g.rows); this.geo = geo;
+    this.pos = new Map();
+    g.nodes.forEach(nd => this.pos.set(nd.id, { x: geo.x0 + nd.col * (geo.x1 - geo.x0) / (g.cols - 1), y: nd.kind === 'src' ? 16 : geo.y(nd.row) }));
+    const key = W + 'x' + V.H + ':' + this.L.id + ':' + g.opt;
+    if (key !== this.sceneKey) { this.sceneKey = key; this.buildScene(); }
+  },
+  thickOf(e) { return LAY[e.layer].th * this.geo.gy * 0.62 * (e.wf < 1 ? 0.78 : e.wf > 1 ? 1.25 : 1); },
+  viaW(e) { return (VIA_PX[e.to] || 14) * 0.8 * (this.geo.narrow ? 0.8 : 1); },
+  buildScene() {
+    const g = this.g, geo = this.geo, xs = c => geo.x0 + c * (geo.x1 - geo.x0) / (g.cols - 1), dummies = [];
+    g.blocked.forEach(q => dummies.push({ x1: xs(q.c0) + 14, x2: xs(q.c1) - 14, y: geo.y(q.row), th: LAY[g.rows[q.row]].th * geo.gy * 0.9 }));
+    const bumps = g.nodes.filter(n => n.kind === 'bump').map(n => this.pos.get(n.id).x);
+    this.scene = figScene(geo, { extra: ['Redder = more resistance', 'Blue outline = next steps'], bumps, goalX: xs(g.tr) - 2, wideSD: true, dummies });
+  },
+  pelletCount() { const s = new Set(this.hist.map(h => h.e.id)); let n = 0; s.forEach(id => n += this.g.edges[id].pel); return n * 10; },
+  upd() {
+    const f = this.spent / this.budget, c = f > 1 ? COL.bad : f > .8 ? COL.warn : COL.good;
+    setMeters(meter('Resistance spent', fmtR(this.spent), 'of ' + fmtR(this.budget), f, c) +
+      '<div class="m"><div class="mh"><span>Segments used</span><b>' + new Set(this.hist.map(h => h.e.id)).size + '</b></div></div>');
+  },
+  info(e) {
+    if (e.kind === 'src') return '<b>Supply rail</b> \u00B7 each bump feeds its own path to the same transistor. The paths share nothing until the drain.';
+    if (e.kind === 'wire') {
+      const l = LAY[e.layer];
+      return '<b>' + l.short + ' wire</b> · L ' + e.L + ' µm · W ' + fmtDim(l.W * e.wf) + (e.wf !== 1 ? (e.wf < 1 ? ' (narrow)' : ' (wide)') : '') + ' · T ' + fmtDim(l.T) + ' → R = ρL/(WT) = <b>' + fmtR(e.R) + '</b>';
+    }
+    return '<b>' + VIA_NAME[e.to] + '</b> · ' + e.n + ' via' + (e.n > 1 ? 's' : '') + ' in parallel → R = ' + fmtR(VIA_R[e.to]) + (e.n > 1 ? ' / ' + nEff(e.n).toFixed(2) + ' (effective)' : '') + ' = <b>' + fmtR(e.R) + '</b>';
+  },
+  go(e, to) {
+    if (this.anim || this.state === 'won') return;
+    this.hintE = null; this.anim = { e, from: this.cur, to, t0: performance.now(), dur: RM ? 0 : 240 };
+    setReadout(this.info(e));
+  },
+  finishMove() {
+    const a = this.anim; this.anim = null;
+    this.hist.push({ e: a.e, from: a.from }); this.cur = a.to; this.spent += a.e.R;
+    const over = this.spent > this.budget + 1e-9;
+    if (this.g.term.has(this.cur) && !over) this.win();
+    else if (over) {
+      this.state = 'over';
+      showResult(0, 'Out of resistance budget', '<span>You spent ' + fmtR(this.spent) + ' against a budget of ' + fmtR(this.budget) + '. Step back and try another branch.</span>', true);
+    }
+    this.upd();
+  },
+  win() {
+    this.state = 'won';
+    const r = this.spent / this.opt; let s = r <= 1.005 ? 3 : r <= 1.07 ? 2 : 1;
+    if (this.hinted) s = Math.min(s, 2);
+    saveStars(this.L.id, s);
+    const by = {};
+    this.hist.forEach(h => { const e = h.e; if (e.kind === 'src') return; const k = e.kind === 'wire' ? LAY[e.layer].short + ' wires' : e.to === 'TR' ? 'Contact plug' : 'Vias to ' + LAY[e.to].short; by[k] = (by[k] || 0) + e.R; });
+    const items = Object.entries(by).sort((a, b) => b[1] - a[1]);
+    const msg = s === 3 ? 'Lowest-resistance path found.' : 'The best single path costs ' + fmtR(this.opt) + '.';
+    const live = this.g.paths.filter(q => !q.dead).sort((x, y) => x.R - y.R), G = live.reduce((a, q) => a + 1 / q.R, 0);
+    const split = live.map(q => LAY[q.layer].short + ' path ' + fmtR(q.R) + ' (' + Math.round(1 / q.R / G * 100) + ' % of the current)').join(', ');
+    const par = ' The paths are independent chains, so each one adds its parts in any order, and the chains conduct in parallel: ' + split + '. The transistor sees <b>' + fmtR(this.g.par) + '</b>, below any single path.';
+    showResult(s, 'Arrived: ' + fmtR(this.spent), '<span>' + msg + par + (this.hinted ? ' Hints cap the score at two stars.' : '') + ' Where the resistance went:</span>' + breakdownHTML(items));
+  },
+  undo() {
+    if (this.anim || !this.hist.length) return;
+    const h = this.hist.pop(); this.cur = h.from; this.spent -= h.e.R; if (this.spent < 1e-9) this.spent = 0;
+    this.state = 'play'; clearResult(); this.upd();
+  },
+  hint() {
+    if (this.anim || this.state === 'won') return;
+    const res = dijkstra(this.g, this.cur), p = pathTo(res, this.g.goal);
+    if (!p.length) return;
+    this.hinted = true; this.hintE = p[0]; hintUntil = performance.now() + 3500;
+    setReadout('Hint: the cheapest way onward from here starts along the dashed line. Total from here: <b>' + fmtR(res.dist.get(this.g.goal)) + '</b>.');
+  },
+  key(ev) {
+    const dirs = { ArrowUp: [0, -1], w: [0, -1], ArrowDown: [0, 1], s: [0, 1], ArrowLeft: [-1, 0], a: [-1, 0], ArrowRight: [1, 0], d: [1, 0] };
+    const d = dirs[ev.key]; if (!d) { if (ev.key === 'Backspace' || ev.key === 'z') { this.undo(); return true; } return false; }
+    this.layout(); const me = this.pos.get(this.cur); let best = null, bs = 0.5;
+    if (this.cur === this.g.start) {
+      const bs3 = this.g.adj.get(this.cur).slice().sort((p, q) => this.pos.get(p.to).x - this.pos.get(q.to).x);
+      const pick = d[0] < 0 ? bs3[0] : d[0] > 0 ? bs3[bs3.length - 1] : d[1] > 0 ? bs3[Math.floor(bs3.length / 2)] : null;
+      if (pick) this.go(pick.e, pick.to);
+      return true;
+    }
+    for (const { e, to } of this.g.adj.get(this.cur)) {
+      const p = this.pos.get(to), dx = p.x - me.x, dy = p.y - me.y, l = Math.hypot(dx, dy) || 1, sc = (dx * d[0] + dy * d[1]) / l;
+      if (sc > bs) { bs = sc; best = { e, to }; }
+    }
+    if (best) this.go(best.e, best.to);
+    return true;
+  },
+  down(x, y) {
+    this.layout();
+    let best = null, bd = 28;
+    if (this.cur === this.g.start && y < this.geo.yTop + 30) {
+      let bx = 1e9; for (const { e, to } of this.g.adj.get(this.cur)) { const dx = Math.abs(this.pos.get(to).x - x); if (dx < bx && dx < 90) { bx = dx; best = { e, to }; } }
+      if (best) { this.go(best.e, best.to); return; }
+    }
+    for (const { e, to } of this.g.adj.get(this.cur)) {
+      const p = this.pos.get(to), d = Math.hypot(p.x - x, p.y - y);
+      if (d < bd) { bd = d; best = { e, to }; }
+    }
+    if (!best) for (const { e, to } of this.g.adj.get(this.cur)) {
+      const d = distSeg(x, y, this.pos.get(e.a), this.pos.get(e.b));
+      if (d < 14 && d < bd) { bd = d; best = { e, to }; }
+    }
+    if (best) this.go(best.e, best.to); else this.move(x, y, true);
+  },
+  move(x, y, force) {
+    this.layout(); let best = null, bd = 12;
+    for (const e of this.g.edges) { if (e.kind === 'src' || e.kind === 'snk') continue; const d = distSeg(x, y, this.pos.get(e.a), this.pos.get(e.b)); if (d < bd) { bd = d; best = e; } }
+    this.hover = best;
+    if (best && (force || !this.anim)) setReadout(this.info(best));
+  },
+  items(done, adj) {
+    const out = [], g = this.g;
+    if (this.rmin === undefined) { const cu = g.edges.filter(e => (e.kind === 'wire' || e.kind === 'via') && e.layer !== 'TUN' && e.to !== 'TR' && e.R > 0).map(e => e.R); this.rmin = Math.min(...cu); this.rmax = Math.max(...cu); }
+    const heat = e => heatCol(e.R, this.rmin, this.rmax);
+    for (const e of g.edges) {
+      if (e.kind === 'src' || e.kind === 'snk') continue;
+      const a = this.pos.get(e.a), b = this.pos.get(e.b), used = done.has(e.id), opt = adj.has(e.id), hov = this.hover === e;
+      const halo = used ? '#12c4e8' : hov ? '#111' : opt ? 'rgba(30,120,255,.65)' : null;
+      if (e.kind === 'wire') {
+        const hx = this.viaW(e) / 2 + 2, th = this.thickOf(e);
+        out.push({ pts: figRect(Math.min(a.x, b.x) - hx, Math.max(a.x, b.x) + hx, a.y, th), col: used ? (e.layer === 'TUN' ? '#f0b24d' : FC.cuUsed) : e.layer === 'TUN' ? FC.w : heat(e), halo, haloW: 9 });
+      } else if (e.to === 'CU5' && a.y === this.geo.yTop) {
+        out.push({ pts: figVia(a.x, a.y - 6, b.y, 36, 1), col: used ? '#d8e8ee' : FC.solder, halo, haloW: 9 });
+      } else {
+        const w = this.viaW(e), plug = e.to === 'TR', col = used ? FC.cuUsed : heat(e);
+        for (let i = 0; i < e.n; i++) {
+          const ox = e.n === 1 ? 0 : (i ? w * 0.6 : -w * 0.6), ww = e.n === 1 ? w : w * 0.7;
+          out.push({ pts: figVia(a.x + ox, a.y, b.y, ww, plug ? 0.92 : 0.84), col: plug ? (used ? '#f0b24d' : FC.w) : col, halo, haloW: 9 });
+        }
+      }
+    }
+    return out;
+  },
+  draw(t) {
+    this.layout();
+    const c = ctx, g = this.g, geo = this.geo, W = V.W, H = V.H;
+    if (this.anim) { const k = this.anim.dur ? Math.min(1, (t - this.anim.t0) / this.anim.dur) : 1; this.anim.k = k; if (k >= 1) this.finishMove(); }
+    c.clearRect(0, 0, W, H); c.drawImage(this.scene, 0, 0, W, H);
+    const done = new Set(this.hist.map(h => h.e.id));
+    const adj = new Set(this.state === 'play' ? g.adj.get(this.cur).map(a => a.e.id) : []);
+    figDraw(c, this.items(done, adj));
+    figLabels(c, geo, true);
+    c.save(); c.lineWidth = 3; c.strokeStyle = '#f2fdff'; c.setLineDash([4, 9]); c.lineDashOffset = RM ? 0 : -t / 28; c.lineCap = 'round';
+    this.hist.forEach(h => { const a = this.pos.get(h.from), b = this.pos.get(h.e.a === h.from ? h.e.b : h.e.a); c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.stroke(); });
+    c.restore();
+    if (this.hintE && performance.now() < hintUntil) {
+      const e = this.hintE, a = this.pos.get(e.a), b = this.pos.get(e.b);
+      c.save(); c.setLineDash([7, 6]); c.strokeStyle = '#009b6e'; c.lineWidth = 3.5; c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.stroke(); c.restore();
+    }
+    /* charge pellets */
+    for (const e of g.edges) {
+      if (done.has(e.id) || e.kind !== 'wire') continue;
+      const a = this.pos.get(e.a), b = this.pos.get(e.b);
+      for (let i = 1; i <= e.pel; i++) { const k = i / (e.pel + 1); c.fillStyle = '#fff'; c.strokeStyle = FC.ink; c.lineWidth = 1; c.beginPath(); c.arc(a.x + (b.x - a.x) * k, a.y + (b.y - a.y) * k, 2.2, 0, 6.3); c.fill(); c.stroke(); }
+    }
+    /* junctions */
+    const touched = new Set(); g.edges.forEach(e => { touched.add(e.a); touched.add(e.b); });
+    const nearby = new Set(this.state === 'play' ? g.adj.get(this.cur).map(a => a.to) : []);
+    g.nodes.forEach(n => { if (n.kind === 'src' || n.kind === 'snk' || !touched.has(n.id) || (n.row === 0 && !(n.kind === 'bump' && nearby.has(n.id)))) return; const p = this.pos.get(n.id), on = nearby.has(n.id); c.fillStyle = on ? '#fff' : 'rgba(255,255,255,.55)'; c.strokeStyle = on ? '#1e78ff' : FC.ink; c.lineWidth = on ? 2.2 : 1; c.beginPath(); c.arc(p.x, p.y, on ? 6 : 3, 0, 6.3); c.fill(); c.stroke(); });
+    /* goal mark on the source/drain contact */
+    const tp = [...g.term].map(id => this.pos.get(id)), tx1 = Math.min(...tp.map(q => q.x)), tx2 = Math.max(...tp.map(q => q.x)), pulse = RM ? 0 : Math.sin(t / 380) * 2;
+    c.strokeStyle = '#00a9c9'; c.lineWidth = 3; c.beginPath(); c.roundRect(tx1 - 20 - pulse, tp[0].y - 20 - pulse, tx2 - tx1 + 40 + 2 * pulse, 40 + 2 * pulse, 20 + pulse); c.stroke();
+    c.font = '600 11px ' + FM; c.textAlign = 'center'; c.textBaseline = 'alphabetic'; c.fillStyle = FC.ink; c.fillText('S/D: 3 contacts', (tx1 + tx2) / 2, tp[0].y + 40);
+    /* cost labels */
+    for (const e of g.edges) {
+      if (e.kind === 'src' || e.kind === 'snk') continue;
+      if (!(this.showAll || adj.has(e.id) || this.hover === e)) continue;
+      const a = this.pos.get(e.a), b = this.pos.get(e.b);
+      if (e.kind === 'wire') pill(fmtR(e.R), (a.x + b.x) / 2, a.y - this.thickOf(e) / 2 - 12, adj.has(e.id) ? '#1e78ff' : null);
+      else { const side = e.arr && e.p < 2 ? -1 : 1, off = (geo.narrow ? 32 : 38) + (e.arr && e.p === 0 ? 44 : 0); pill(fmtR(e.R), a.x + side * off, (a.y + b.y) / 2, adj.has(e.id) ? '#1e78ff' : null); }
+    }
+    /* electron */
+    let p = this.pos.get(this.cur);
+    if (this.anim) { const q = this.pos.get(this.anim.to), k = this.anim.k || 0; p = { x: p.x + (q.x - p.x) * k, y: p.y + (q.y - p.y) * k }; }
+    c.save(); c.shadowColor = '#00cfee'; c.shadowBlur = 14; c.fillStyle = '#00cfee'; c.beginPath(); c.arc(p.x, p.y, 10, 0, 6.3); c.fill(); c.restore();
+    c.strokeStyle = FC.ink; c.lineWidth = 2; c.beginPath(); c.arc(p.x, p.y, 10, 0, 6.3); c.stroke();
+    c.fillStyle = '#e9fbff'; c.beginPath(); c.arc(p.x - 3, p.y - 3, 3, 0, 6.3); c.fill();
+    this.profile();
+  },
+  profile() {
+    const steps = this.hist.map(h => { const e = h.e; return { dv: e.R * I_MA, col: e.kind === 'wire' ? LAY[e.layer].color : e.to === 'TR' ? FC.w : '#5b8bd4', lab: e.kind === 'wire' ? LAY[e.layer].short : 'via' }; });
+    const lim = this.budget * I_MA;
+    drawProfile(steps, { span: Math.max(lim * 1.25, this.spent * I_MA * 1.05), limit: lim, limitLabel: 'budget', slots: this.g.optPath.length + 2, ok: this.state === 'won' });
+  }
+};
+
+/* ---------- mode 2: widen wires, add vias, watch the IR drop ---------- */
+const Widen = {
+  I: 0.25, /* mA drawn by the transistor */
+  height() { return figGeo(Math.floor(stage.clientWidth) || 900, this.rows).H; },
+  init(L) {
+    this.L = L;
+    this.segs = L.chain.map(s => {
+      const base = s.t === 'wire' ? wireR(s.l, s.L) : viaR(s.to), opts = [];
+      for (let k = 1; k <= 4; k++) opts.push({ cost: s.step * (k - 1), R: s.t === 'via' ? base / nEff(k) : base / k });
+      return Object.assign({}, s, { base, opts, m: 1 });
+    });
+    this.B = L.budget; this.sol = widenSolve(this.segs, this.B);
+    this.target = this.sol.R * L.slack; this.R0 = this.segs.reduce((a, s) => a + s.base, 0);
+    this.rows = ['PAD'].concat(L.chain.filter(s => s.t === 'wire').map(s => s.l), ['TR']);
+    this.tool = 'inc'; this.hover = -1; this.focus = -1; this.sceneKey = '';
+    fitCanvas(this.height()); this.tools(); this.reset();
+  },
+  tools() { setTools([{ id: 'inc', label: 'Widen / add via' }, { id: 'dec', label: 'Narrow / remove via' }], this.tool, id => { this.tool = id; this.tools(); }); },
+  cost() { return this.segs.reduce((a, s) => a + s.step * (s.m - 1), 0); },
+  total() { return this.segs.reduce((a, s) => a + segR(s), 0); },
+  reset() {
+    this.segs.forEach(s => s.m = 1); this.stars = 0; this.hinted = false; this.hintI = -1; this.hintUntil = 0;
+    clearResult(); this.upd();
+    setReadout('Tap a wire to widen it, or a via to add one in parallel. Use the Narrow tool (or right-click) to take a step back.');
+  },
+  label(s) { return s.t === 'wire' ? LAY[s.l].name + ' wire' : VIA_NAME[s.to] + ' to ' + LAY[s.to].short; },
+  thick(s) { return LAY[s.l].th * this.geo.gy * (0.55 + 0.17 * (s.m - 1)); },
+  viaW(s) { return (VIA_PX[s.to] || 14) * 0.8 * (this.geo.narrow ? 0.8 : 1); },
+  layout() {
+    const W = V.W, geo = figGeo(W, this.rows); this.geo = geo;
+    const left = geo.x0 + 10, right = geo.x1 - 10; let j = 0;
+    this.segs.forEach(s => {
+      if (s.t !== 'wire') return;
+      const even = j % 2 === 0; s.y = geo.y(j + 1); s.xa = even ? left : right; s.xb = even ? right : left; j++;
+    });
+    this.segs.forEach((s, i) => { if (s.t === 'via') { const w = this.segs[i - 1]; s.x = w.xb; s.y1 = w.y; s.y2 = geo.y(this.rows.indexOf(s.to)); } });
+    const key = W + 'x' + V.H + ':' + this.L.id;
+    if (key !== this.sceneKey) { this.sceneKey = key; this.scene = figScene(geo, { extra: ['Red tint = share of the', 'voltage lost on that part'], startX: left, goalX: this.segs[this.segs.length - 1].x, dummies: [] }); this.startX = left; }
+  },
+  hit(x, y) {
+    for (let i = 0; i < this.segs.length; i++) {
+      const s = this.segs[i];
+      if (s.t === 'via' && Math.abs(x - s.x) < this.viaW(s) / 2 + 8 + (s.m - 1) * 6 && y > s.y1 + 14 && y < s.y2 - 14) return i;
+    }
+    for (let i = 0; i < this.segs.length; i++) {
+      const s = this.segs[i];
+      if (s.t === 'wire' && x > Math.min(s.xa, s.xb) - 8 && x < Math.max(s.xa, s.xb) + 8 && Math.abs(y - s.y) < Math.max(16, this.thick(s) / 2 + 6)) return i;
+    }
+    for (let i = 0; i < this.segs.length; i++) {
+      const s = this.segs[i];
+      if (s.t === 'via' && Math.abs(x - s.x) < this.viaW(s) / 2 + 10 + (s.m - 1) * 6 && y > s.y1 && y < s.y2) return i;
+    }
+    return -1;
+  },
+  info(i) {
+    const s = this.segs[i], R = segR(s), mv = R * this.I;
+    if (s.t === 'wire') {
+      const l = LAY[s.l];
+      return '<b>' + l.name + ' wire</b> \u00B7 ' + s.L + ' \u00B5m \u00B7 W ' + fmtDim(l.W * s.m) + ' (' + s.m + '\u00D7) \u00B7 T ' + fmtDim(l.T) + ' \u2192 R = \u03C1L/(mWT) = <b>' + fmtR(R) + '</b>, drops <b>' + mv.toFixed(1) + ' mV</b>. Each step costs ' + s.step + ' area.';
+    }
+    return '<b>' + VIA_NAME[s.to] + '</b> \u00B7 ' + s.m + ' in parallel \u2192 R = ' + fmtR(VIA_R[s.to]) + ' / ' + nEff(s.m).toFixed(2) + ' (effective, current crowding) = <b>' + fmtR(R) + '</b>, drops <b>' + mv.toFixed(1) + ' mV</b>. Each extra via costs ' + s.step + ' area.';
+  },
+  apply(i, dir) {
+    const s = this.segs[i];
+    if (dir > 0) {
+      if (s.m >= 4) { setReadout('That element is already at 4\u00D7.'); return; }
+      if (this.cost() + s.step > this.B) { setReadout('Not enough routing area left. Narrow something else first, or spend it somewhere that matters more.'); return; }
+      s.m++;
+    } else if (s.m > 1) s.m--;
+    this.focus = i; this.upd(); setReadout(this.info(i));
+  },
+  down(x, y, ev) { const i = this.hit(x, y); if (i < 0) return; this.apply(i, (ev && ev.shiftKey) || this.tool === 'dec' ? -1 : 1); },
+  alt(x, y) { const i = this.hit(x, y); if (i >= 0) this.apply(i, -1); },
+  move(x, y) { const i = this.hit(x, y); if (i !== this.hover) { this.hover = i; if (i >= 0) setReadout(this.info(i)); } cv.style.cursor = i >= 0 ? 'pointer' : 'default'; },
+  upd() {
+    const R = this.total(), cost = this.cost(), drop = R * this.I, tgt = this.target * this.I, d0 = this.R0 * this.I, ok = R <= this.target + 1e-9;
+    setMeters(meter('IR drop', drop.toFixed(0) + ' mV', 'target \u2264 ' + tgt.toFixed(0) + ' mV', drop / d0, ok ? COL.good : COL.cu, tgt / d0) +
+      meter('Routing area', cost + ' / ' + this.B, '', cost / this.B, cost >= this.B ? COL.warn : COL.e) +
+      '<div class="m"><div class="mh"><span>Voltage at the transistor</span><b>' + (1000 - drop).toFixed(0) + ' mV <i>of 1000 mV</i></b></div></div>');
+    if (ok) {
+      const r = R / this.sol.R; let s = r <= 1.005 ? 3 : r <= 1.04 ? 2 : 1; if (this.hinted) s = Math.min(s, 2);
+      if (s !== this.stars) {
+        this.stars = s; saveStars(this.L.id, s);
+        const items = this.segs.map(q => [this.label(q), segR(q)]).sort((a, b) => b[1] - a[1]).slice(0, 5);
+        showResult(s, 'Under target: ' + fmtR(R) + ', ' + drop.toFixed(0) + ' mV lost', '<span>The best possible with this area is ' + fmtR(this.sol.R) + '. Widening also adds capacitance, which matters for signal wires but not for a DC supply rail like this one. Largest remaining contributors:</span>' + breakdownHTML(items));
+      }
+    } else if (this.stars) { this.stars = 0; clearResult(); }
+  },
+  hint() {
+    let bi = -1, bd = 0;
+    this.segs.forEach((s, i) => { const want = this.sol.pick[i] + 1, d = Math.abs(segR(s) - segR(s, want)); if (want !== s.m && d > bd) { bd = d; bi = i; } });
+    if (bi < 0) { setReadout('Your allocation already matches the best one for this area.'); return; }
+    const s = this.segs[bi], want = this.sol.pick[bi] + 1; this.hinted = true; this.hintI = bi; this.hintUntil = performance.now() + 3500;
+    setReadout('Hint: set the <b>' + this.label(s) + '</b> to <b>' + want + '\u00D7</b>.');
+  },
+  inset(c, i, x, y) {
+    const s = this.segs[i], w = 186, h = 134, R = segR(s);
+    c.fillStyle = '#e3e3e3'; c.fillRect(x, y, w, h); c.strokeStyle = FC.ink; c.lineWidth = 1; c.strokeRect(x + .5, y + .5, w - 1, h - 1);
+    c.fillStyle = FC.ink; c.font = '600 11px ' + FD; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(this.label(s) + ' cross-section', x + 8, y + 12);
+    const cx = x + w / 2, cy = y + 60; c.font = '400 10px ' + FM; c.textAlign = 'center';
+    if (s.t === 'wire') {
+      const l = LAY[s.l], Wn = l.W * s.m, wpx = 30 * s.m, hpx = Math.max(12, Math.min(50, wpx * l.T / Wn));
+      c.fillStyle = s.l === 'TUN' ? FC.w : FC.cu; c.fillRect(cx - wpx / 2, cy - hpx / 2, wpx, hpx); c.strokeRect(cx - wpx / 2 + .5, cy - hpx / 2 + .5, wpx - 1, hpx - 1);
+      c.fillStyle = FC.ink; c.fillText('W ' + fmtDim(Wn) + ' (' + s.m + '\u00D7)', cx, cy - hpx / 2 - 8); c.fillText('T ' + fmtDim(l.T), cx, cy + hpx / 2 + 9);
+    } else {
+      for (let k = 0; k < s.m; k++) { const px = cx + (k - (s.m - 1) / 2) * 22; figPath(c, figVia(px, cy - 22, cy + 22, 14, 0.62)); c.fillStyle = s.to === 'TR' ? FC.w : FC.cu; c.fill(); c.stroke(); }
+      c.fillStyle = FC.ink; c.fillText(s.m + ' via' + (s.m > 1 ? 's' : '') + ' in parallel', cx, cy + 36);
+    }
+    c.fillStyle = FC.ink; c.textAlign = 'left'; c.fillText(s.t === 'wire' ? 'R = \u03C1L / (m\u00B7W\u00B7T)' : 'R = R\u2081 / n_eff', x + 8, y + h - 24);
+    c.font = '600 11px ' + FM; c.fillText('= ' + fmtR(R) + '  \u2192  \u2212' + (R * this.I).toFixed(1) + ' mV', x + 8, y + h - 9);
+  },
+  profile() {
+    const I = this.I, steps = this.segs.map(s => ({ dv: segR(s) * I, ghost: s.base * I, col: s.t === 'wire' ? LAY[s.l].color : s.to === 'TR' ? FC.w : '#5b8bd4', lab: s.t === 'wire' ? LAY[s.l].short : 'via' }));
+    drawProfile(steps, { span: this.R0 * I * 1.08, limit: this.target * I, limitLabel: 'target', slots: steps.length, ok: this.total() <= this.target + 1e-9 });
+  },
+  draw(t) {
+    this.layout();
+    const c = ctx, W = V.W, H = V.H, geo = this.geo, R = this.total(), I = this.I, narrow = geo.narrow;
+    c.clearRect(0, 0, W, H); c.drawImage(this.scene, 0, 0, W, H);
+    const items = [], now = performance.now();
+    this.segs.forEach((s, i) => {
+      const share = segR(s) / R, heat = Math.min(.8, .05 + share * 2.2), hint = i === this.hintI && now < this.hintUntil;
+      const halo = hint ? '#12c4e8' : i === this.hover ? '#111' : null;
+      if (s.t === 'wire') items.push({ pts: figRect(Math.min(s.xa, s.xb) - this.viaW(s) / 2 - 2, Math.max(s.xa, s.xb) + this.viaW(s) / 2 + 2, s.y, this.thick(s)), col: LAY[s.l].color, heat, halo, haloW: 9 });
+      else {
+        const w = this.viaW(s), plug = s.to === 'TR', ww = s.m === 1 ? w : w * 0.7;
+        for (let k = 0; k < s.m; k++) items.push({ pts: figVia(s.x + (k - (s.m - 1) / 2) * ww * 1.15, s.y1, s.y2, ww, plug ? 0.92 : 0.84), col: plug ? FC.w : FC.cu, heat, halo, haloW: 9 });
+      }
+    });
+    items.unshift({ pts: figVia(this.startX, geo.yTop - 6, geo.y(1), 36, 1), col: FC.solder });
+    figDraw(c, items);
+    figLabels(c, geo, true);
+    this.segs.forEach(s => {
+      const Rs = segR(s), mv = Rs * I, txt = mv < 10 ? mv.toFixed(1) : mv.toFixed(0), hot = Rs / R > .2 ? '#c8102e' : null;
+      if (s.t === 'wire') {
+        pill(narrow ? s.m + '\u00D7 \u00B7 \u2212' + txt + ' mV' : LAY[s.l].short + ' ' + s.L + ' \u00B5m \u00B7 ' + s.m + '\u00D7 \u00B7 \u2212' + txt + ' mV', (s.xa + s.xb) / 2, s.y - this.thick(s) / 2 - 13, hot);
+      } else {
+        const dx = s.x > W / 2 ? -(narrow ? 54 : 62) : (narrow ? 54 : 62);
+        pill(s.m + ' via' + (s.m > 1 ? 's' : '') + ' \u00B7 \u2212' + txt + ' mV', s.x + dx, (s.y1 + s.y2) / 2, hot);
+      }
+    });
+    const last = this.segs[this.segs.length - 1], v = 1000 - R * I, ok = v >= 1000 - this.target * I;
+    c.font = '600 11px ' + FM; c.textAlign = 'center'; c.textBaseline = 'alphabetic'; c.fillStyle = FC.ink;
+    c.textAlign = 'left'; c.fillText('VDD 1000 mV', this.startX + geo.Wb / 2 + 12, geo.yBase - 14); c.textAlign = 'center';
+    c.fillStyle = ok ? '#0a7a3d' : '#b00020'; c.fillText('S/D ' + v.toFixed(0) + ' mV', last.x, geo.yS + 40);
+    c.strokeStyle = '#00a9c9'; c.lineWidth = 3; c.beginPath(); c.arc(last.x, geo.yS, 20, 0, 6.3); c.stroke();
+    const fi = this.hover >= 0 ? this.hover : this.focus;
+    if (!narrow && fi >= 0 && geo.legendBottom) this.inset(c, fi, W - 196, geo.legendBottom + 10);
+    this.profile();
+  }
+};
+
+/* ---------- mode 3: space the wires, add VDD / GND shields ---------- */
+const Space = {
+  height() { return V.W < 640 ? 420 : 450; },
+  init(L) {
+    this.L = L; this.best = optimizeSpace(L); this.opt = this.best.f; this.target = this.opt * 1.08;
+    setLegend([['Noisy neighbor (counts \u00D72)', FC.cu], ['Sensitive wire', '#2f7fd8'], ['GND (counts \u00D71)', '#5f9a78'], ['VDD (counts \u00D71)', '#e0aa1f']], []);
+    this.tool = 'move'; fitCanvas(this.height()); this.reset();
+  },
+  v() { return Object.assign({}, this.L, { wires: this.wires }); },
+  ws() { return this.wires.map(w => w.w); },
+  reset() {
+    const L = this.L; this.wires = L.wires.map(w => Object.assign({}, w));
+    const n = this.wires.length, tot = L.Wc - this.ws().reduce((a, b) => a + b, 0);
+    let gaps = L.start;
+    if (gaps === 'packed') { gaps = new Array(n + 1).fill(L.smin); gaps[n] = tot - L.smin * n; }
+    this.xs = gapsToX(gaps, this.ws()); this.startF = worstVictim(this.v(), this.xs);
+    this.sel = -1; this.drag = null; this.hinted = false; this.showOpt = 0; this.won = 0; this.tool = 'move'; this.hx = -1;
+    this.tools(); clearResult(); this.upd();
+    setReadout('Drag a wire sideways. A wire that reaches the minimum spacing pushes its neighbor. Arrow keys nudge the selected wire.' + (L.shields ? ' Use the + GND / + VDD tools to insert supply wires.' : ''));
+  },
+  left() { return (this.L.shields || 0) - this.wires.filter(w => w.add).length; },
+  tools() {
+    const L = this.L; if (!L.shields) { setTools([], '', () => {}); return; }
+    const left = this.left(); if (left <= 0 && (this.tool === 'G' || this.tool === 'P')) this.tool = 'move';
+    setTools([{ id: 'move', label: 'Move wires' }, { id: 'G', label: '+ GND wire (' + left + ' left)', off: left <= 0 }, { id: 'P', label: '+ VDD wire (' + left + ' left)', off: left <= 0 }, { id: 'X', label: 'Remove wire' }], this.tool,
+      id => { this.tool = id; this.tools(); setReadout(id === 'move' ? 'Drag wires sideways.' : id === 'X' ? 'Tap a supply wire you added to remove it.' : 'Tap the gap where the ' + (id === 'G' ? 'GND' : 'VDD') + ' wire should go. It needs ' + SH_W + ' nm plus spacing on both sides.'); });
+  },
+  geom() { const L = this.L; this.s = (V.W - 48) / L.Wc; this.ox = 24; this.cy = V.H / 2 + 8; this.th = Math.min(L.T * this.s, V.H * 0.34); },
+  moveTo(i, nx) {
+    const L = this.L, ws = this.ws(), n = ws.length, sm = L.smin, xs = this.xs;
+    let lo = sm; for (let j = 0; j < i; j++) lo += ws[j] + sm;
+    let hi = L.Wc - sm - ws[i]; for (let j = i + 1; j < n; j++) hi -= ws[j] + sm;
+    xs[i] = Math.max(lo, Math.min(hi, nx));
+    for (let j = i + 1; j < n; j++) xs[j] = Math.max(xs[j], xs[j - 1] + ws[j - 1] + sm);
+    for (let j = i - 1; j >= 0; j--) xs[j] = Math.min(xs[j], xs[j + 1] - ws[j] - sm);
+  },
+  pick(x) {
+    this.geom(); const ws = this.ws(); let best = -1, bd = 1e9;
+    this.xs.forEach((wx, i) => {
+      const a = this.ox + wx * this.s, b = a + ws[i] * this.s, d = x < a ? a - x : x > b ? x - b : 0, cd = Math.abs(x - (a + b) / 2);
+      if (d < 14 && d + cd * 0.01 < bd) { bd = d + cd * 0.01; best = i; }
+    });
+    return best;
+  },
+  insert(type, x) {
+    const L = this.L, ws = this.ws();
+    if (this.left() <= 0) { setReadout('All supply wires are placed. Use Remove wire to take one back.'); return; }
+    if (ws.reduce((a, b) => a + b, 0) + SH_W + L.smin * (ws.length + 2) > L.Wc + 1e-9) { setReadout('No room: the channel cannot hold another wire at minimum spacing.'); return; }
+    this.geom(); let k = 0;
+    while (k < this.wires.length && this.ox + (this.xs[k] + ws[k] / 2) * this.s < x) k++;
+    this.wires.splice(k, 0, { t: type, w: SH_W, n: type === 'G' ? 'GND' : 'VDD', add: true }); this.xs.splice(k, 0, 0);
+    this.moveTo(k, (x - this.ox) / this.s - SH_W / 2); this.sel = k; this.tools(); this.upd();
+    setReadout('Inserted. Neighbors were pushed aside to make room.');
+  },
+  remove(i) {
+    if (i < 0) return;
+    if (!this.wires[i].add) { setReadout('That wire is part of the layout and cannot be removed.'); return; }
+    this.wires.splice(i, 1); this.xs.splice(i, 1); this.sel = -1; this.tools(); this.upd();
+  },
+  down(x) {
+    if (this.tool === 'G' || this.tool === 'P') { this.insert(this.tool, x); return; }
+    const i = this.pick(x);
+    if (this.tool === 'X') { this.remove(i); return; }
+    this.sel = i; if (i >= 0) this.drag = { i, dx: x - (this.ox + this.xs[i] * this.s) };
+  },
+  move(x) {
+    this.hx = x;
+    if (this.drag) { this.moveTo(this.drag.i, (x - this.drag.dx - this.ox) / this.s); this.upd(); }
+    else cv.style.cursor = this.tool === 'move' ? (this.pick(x) >= 0 ? 'grab' : 'default') : 'crosshair';
+  },
+  up() { this.drag = null; },
+  key(ev) {
+    const n = this.wires.length;
+    if ((ev.key === 'Delete' || ev.key === 'Backspace') && this.sel >= 0) { this.remove(this.sel); return true; }
+    if (ev.key === 'ArrowUp' || ev.key === 'ArrowDown') { this.sel = this.sel < 0 ? 0 : (this.sel + (ev.key === 'ArrowDown' ? 1 : n - 1)) % n; return true; }
+    if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') {
+      if (this.sel < 0) this.sel = 0;
+      this.moveTo(this.sel, this.xs[this.sel] + (ev.key === 'ArrowRight' ? 5 : -5)); this.upd(); return true;
+    }
+    return false;
+  },
+  upd() {
+    const v = this.v(); let html = '';
+    this.wires.forEach((w, i) => {
+      if (w.t !== 'V') return;
+      const c = ceffOf(v, this.xs, i), ok = c <= this.target + 1e-9, top = this.target * 1.9;
+      html += meter(w.n + ' capacitance', fmtF(c), '≤ ' + fmtF(this.target), c / top, ok ? COL.good : COL.warn, this.target / top);
+    });
+    setMeters(html);
+    const f = worstVictim(v, this.xs);
+    if (f <= this.target + 1e-9) {
+      const r = f / this.opt; let s = r <= 1.02 ? 3 : r <= 1.05 ? 2 : 1; if (this.hinted) s = Math.min(s, 2);
+      if (s !== this.won) {
+        this.won = s; saveStars(this.L.id, s);
+        const used = this.wires.filter(w => w.add).length;
+        showResult(s, 'Worst sensitive wire: ' + fmtF(f), '<span>You started at ' + fmtF(this.startF) + '. The best layout reaches about ' + fmtF(this.opt) + '. ' + (used ? 'You used ' + used + ' supply wire' + (used > 1 ? 's' : '') + '. ' : '') + 'Neighbors that switch against a wire count twice, so distance and shields next to the sensitive wires pay off most.</span>');
+      }
+    } else if (this.won) { this.won = 0; clearResult(); }
+  },
+  hint() {
+    this.hinted = true; this.showOpt = performance.now() + 3500;
+    setReadout('Hint: the dashed outlines show a near-optimal layout' + (this.L.shields ? ', including where its supply wires go' : '') + '.');
+  },
+  draw(t) {
+    this.geom();
+    const c = ctx, W = V.W, H = V.H, L = this.L, s = this.s, ox = this.ox, cy = this.cy, th = this.th, xs = this.xs, wires = this.wires, n = wires.length, v = this.v(), ink = FC.ink;
+    const top = cy - th / 2, bot = cy + th / 2, cw = L.Wc * s;
+    const wfill = w => w.t === 'V' ? '#2f7fd8' : w.t === 'A' ? FC.cu : w.t === 'P' ? '#e0aa1f' : '#5f9a78';
+    c.clearRect(0, 0, W, H); c.fillStyle = FC.paper; c.fillRect(0, 0, W, H);
+    c.fillStyle = FC.sod; c.fillRect(ox, top - 40, cw, th + 80); c.strokeStyle = ink; c.lineWidth = 1; c.strokeRect(ox + .5, top - 39.5, cw - 1, th + 79);
+    c.fillStyle = '#8f9aa6'; c.fillRect(ox, top - 40, cw, 12); c.fillRect(ox, bot + 28, cw, 12); c.strokeRect(ox + .5, top - 39.5, cw - 1, 11); c.strokeRect(ox + .5, bot + 28.5, cw - 1, 11);
+    c.fillStyle = '#222'; c.font = '400 10px ' + FM; c.textAlign = 'left'; c.textBaseline = 'middle';
+    c.fillText('ground plane above', ox + 6, top - 34); c.fillText('ground plane below', ox + 6, bot + 34);
+    c.save(); c.setLineDash([4, 5]); c.strokeStyle = '#5a6672'; c.lineWidth = 1.5;
+    [ox, ox + cw].forEach(x => { c.beginPath(); c.moveTo(x, top - 62); c.lineTo(x, bot + 62); c.stroke(); }); c.restore();
+    /* coupling field between neighbours, drawn as arcs that bow outwards */
+    for (let i = 0; i < n - 1; i++) {
+      const x1 = ox + (xs[i] + wires[i].w) * s, x2 = ox + xs[i + 1] * s, gap = xs[i + 1] - xs[i] - wires[i].w, mid = (x1 + x2) / 2;
+      const cc = ccFF(L, gap, wires[i].w), k = Math.max(1, Math.min(14, Math.round(cc * 1.4)));
+      const noisy = wires[i].t === 'A' || wires[i + 1].t === 'A', sh = wires[i].t === 'G' || wires[i + 1].t === 'G' || wires[i].t === 'P' || wires[i + 1].t === 'P';
+      c.strokeStyle = noisy ? '#d97706' : sh ? '#15803d' : '#1d4ed8'; c.lineWidth = 1.6; c.globalAlpha = .9;
+      for (let j = 1; j <= k; j++) { const yy = top + j / (k + 1) * th, bow = (yy - cy) * 0.5; c.beginPath(); c.moveTo(x1, yy); c.quadraticCurveTo(mid, yy + bow, x2, yy); c.stroke(); }
+      c.globalAlpha = 1; c.fillStyle = '#222'; c.font = '400 10px ' + FM; c.textAlign = 'center';
+      c.fillText(gap.toFixed(0) + ' nm', mid, bot + 52 + (i % 2) * 15);
+    }
+    wires.forEach((w, i) => {
+      const x = ox + xs[i] * s, ww = w.w * s;
+      c.fillStyle = wfill(w); c.fillRect(x, top, ww, th);
+      if (w.t === 'G' || w.t === 'P') { c.save(); c.beginPath(); c.rect(x, top, ww, th); c.clip(); c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 2; for (let k = -th; k < ww; k += 9) { c.beginPath(); c.moveTo(x + k, top + th); c.lineTo(x + k + th, top); c.stroke(); } c.restore(); }
+      c.strokeStyle = ink; c.lineWidth = 1.6; c.strokeRect(x + .5, top + .5, ww - 1, th - 1);
+      if (i === this.sel) { c.strokeStyle = '#00a9c9'; c.lineWidth = 3; c.strokeRect(x - 3, top - 3, ww + 6, th + 6); }
+      c.fillStyle = ink; c.font = '600 11px ' + FD; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(w.n, x + ww / 2, top - 52);
+      if (w.t === 'V') { const cv2 = ceffOf(v, xs, i), ok = cv2 <= this.target + 1e-9; c.fillStyle = ok ? '#0a7a3d' : '#b45309'; c.font = '600 11px ' + FM; c.fillText(fmtF(cv2), x + ww / 2, top - 68); }
+    });
+    if ((this.tool === 'G' || this.tool === 'P') && this.hx >= 0) {
+      c.save(); c.setLineDash([5, 4]); c.strokeStyle = this.tool === 'G' ? '#3f7d5a' : '#b88a00'; c.lineWidth = 2;
+      c.strokeRect(this.hx - SH_W * s / 2, top - 4, SH_W * s, th + 8); c.restore();
+    }
+    if (performance.now() < this.showOpt) {
+      c.save(); c.setLineDash([6, 5]); c.strokeStyle = '#111'; c.lineWidth = 1.8;
+      this.best.xs.forEach((wx, i) => { const bw = this.best.wires[i]; c.strokeRect(ox + wx * s, top - 5, bw.w * s, th + 10); }); c.restore();
+    }
+    c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = '400 10px ' + FM; c.fillStyle = '#4a5662';
+    c.fillText(W < 640 ? 'amber = noisy neighbor (\u00D72) \u00B7 green = quiet or supply (\u00D71)' : 'cross-section, T = ' + L.T + ' nm, L = ' + L.Lw + ' \u00B5m \u00B7 amber field = noisy neighbor, counts \u00D72 \u00B7 green = supply neighbor, counts \u00D71 \u00B7 blue = signal neighbor', ox, H - 12);
+  }
+};
+cv.addEventListener('pointerleave', () => { Space.hx = -1; });
+
+
+/* ---------- mode 4: trade-off lab (RC delay, electromigration, repeaters) ---------- */
+const E0F = 8.854e-12, KB = 8.617e-5;
+function labCtlVals(c) {
+  if (c.vals) return c.vals.slice();
+  const out = []; for (let v = c.min; v <= c.max + 1e-9; v += c.step) out.push(+v.toFixed(4)); return out;
+}
+function labFmt(c, v, L) {
+  if (c.fmt === 'dielectric') return L.cfg.names[v];
+  return (Number.isInteger(v) ? v : v.toFixed(1)) + (c.unit || '');
+}
+/* wire delay on a fixed pitch: Sakurai-Tamaru capacitance, distributed RC (0.38 R C) */
+function rcEval(L, p) {
+  const c = L.cfg, W = p.W, S = c.P - W, T = c.T, h = c.h;
+  const d = p.d == null ? 0 : p.d, tb = p.tb == null ? 0 : p.tb;
+  const k = c.kTable ? c.kTable[d] : c.k, rfac = c.pen ? 1 + c.pen[d] : 1;
+  const Wm = W / 1000, Tm = T / 1000, hm = h / 1000, Sm = S / 1000;
+  let rho = 0.0172, A = Wm * Tm;
+  if (c.size) {
+    /* electrons scatter at the copper core's own surfaces (inside the liner) and at grain boundaries; Matthiessen: resistivities add */
+    const lam = 0.039, spec = 0.5, refl = 0.4, Wc = Math.max(0.005, Wm - 2 * tb / 1000), Tcu = Math.max(0.005, Tm - tb / 1000);
+    const grain = Math.max(0.02, Math.min(0.1, 2.5 * Wc)), al = (lam / grain) * refl / (1 - refl);
+    const ms = 1 / (1 - 1.5 * al + 3 * al * al - 3 * al * al * al * Math.log(1 + 1 / al));
+    const fs = 0.375 * (1 - spec) * lam * (1 / Wc + 1 / Tcu);
+    rho = 0.0172 * (1 + fs + (ms - 1));
+    A = Math.max(1e-6, Wc * Tcu);
+  }
+  const R = rho * c.L * rfac / A;
+  const eps = E0F * k * 1e-6; /* F per um */
+  const Cg = eps * (1.15 * Wm / hm + 2.8 * Math.pow(Tm / hm, 0.222));
+  const Cc = eps * (0.03 * Wm / hm + 0.83 * Tm / hm - 0.07 * Math.pow(Tm / hm, 0.222)) * Math.pow(hm / Sm, 1.34);
+  const C = (Cg + 2 * 2 * Cc) * c.L, tau = 0.38 * R * C;
+  let textbook = null;
+  if (c.size) { const Rt = 0.0172 * c.L / (Wm * Tm); textbook = 0.38 * Rt * C * 1e12; }
+  const why = []; let ok = true;
+  if (c.size && tb < 2) { ok = false; why.push('A barrier thinner than 2 nm cannot stop copper from diffusing into the dielectric.'); }
+  if (c.budget != null && d > c.budget) { ok = false; why.push('Over budget: ' + c.names[d] + ' costs ' + d + ' and you can afford ' + c.budget + '.'); }
+  return { obj: tau * 1e12, ok, why, R, C: C * 1e15, S, k, rho, rfac, textbook, Cg: Cg * c.L * 1e15, Cc: Cc * c.L * 1e15 };
+}
+/* electromigration: Black's equation for the wire and for the via array */
+function emEval(L, p) {
+  const c = L.cfg, I = c.I * 1e-3, Tk = c.Tc + 273.15, Tref = 105 + 273.15;
+  const th = Math.exp(c.Ea / KB * (1 / Tk - 1 / Tref));
+  const Jw = I / ((p.W * 1e-7) * (c.T * 1e-7)), Av = Math.pow(c.via * 1e-7, 2), Jv = I / (p.n * Av);
+  /* Black's equation gives the MEDIAN life; a product spec is the early-failure tail. Lifetimes are lognormal, so t(0.1 %) = t50 * exp(-3.09 sigma) */
+  const f = Math.exp(-(c.z || 0) * (c.sigma || 0)), t0 = c.tref || c.years;
+  const lw = t0 * Math.pow(c.Jw * 1e6 / Jw, c.n) * th * f, lv = t0 * Math.pow(c.Jv * 1e6 / Jv, c.n) * th * f;
+  const ok = lw >= c.years && lv >= c.years, why = [];
+  if (lw < c.years) why.push('The wire reaches only ' + lw.toFixed(1) + ' years before the first 0.1 % fail. Widen it to lower the current density.');
+  if (lv < c.years) why.push('The via array reaches only ' + lv.toFixed(1) + ' years before the first 0.1 % fail. Add vias in parallel.');
+  return { obj: p.W / 100 + 0.5 * p.n, ok, why, lw, lv, Jw: Jw / 1e6, Jv: Jv / 1e6, th };
+}
+/* repeater chain, Bakoglu model: N repeaters split the wire into N+1 segments */
+function repEval(L, p) {
+  const c = L.cfg, N = p.N, h = p.h == null ? 1 : p.h, seg = c.L / (N + 1);
+  const Rw = c.r * seg, Cw = c.c * 1e-15 * seg, Rd = c.Rd / h, Cin = c.Cin * 1e-15 * h;
+  const per = 0.69 * (Rd * (Cw + Cin) + Rw * Cin) + 0.38 * Rw * Cw + c.tp * 1e-12;
+  const area = Math.max(N, 1) * h, ok = c.area == null || area <= c.area, why = [];
+  if (!ok) why.push('Over the area limit: ' + Math.max(N, 1) + ' × ' + h + ' = ' + area + ' but you can afford ' + c.area + '.');
+  return { obj: (N + 1) * per * 1e12, ok, why, seg, area, per: per * 1e12 };
+}
+const labEval = (L, p) => L.type === 'rc' ? rcEval(L, p) : L.type === 'em' ? emEval(L, p) : repEval(L, p);
+
+const Lab = {
+  height() { return V.W < 640 ? 560 : 500; },
+  init(L) {
+    this.L = L; this.cs = L.controls.map(c => { const vals = labCtlVals(c); return Object.assign({}, c, { vals, initIdx: c.init != null && c.vals ? c.init : Math.max(0, vals.indexOf(c.init)) }); });
+    this.grid = []; const idx = new Array(this.cs.length).fill(0);
+    const rec = k => {
+      if (k === this.cs.length) { const p = this.pOf(idx), r = labEval(L, p); this.grid.push(Object.assign({ idx: idx.slice(), p }, r)); return; }
+      for (let i = 0; i < this.cs[k].vals.length; i++) { idx[k] = i; rec(k + 1); }
+    };
+    rec(0);
+    this.best = this.grid.filter(g => g.ok).reduce((a, b) => (!a || b.obj < a.obj - 1e-12) ? b : a, null);
+    this.mx = { R: 0, C: 0, obj: 0 }; this.grid.forEach(g => { this.mx.obj = Math.max(this.mx.obj, g.obj); if (g.R != null) this.mx.R = Math.max(this.mx.R, g.R); if (g.C != null) this.mx.C = Math.max(this.mx.C, g.C); });
+    fitCanvas(this.height()); this.reset();
+  },
+  pOf(idx) { const p = {}; this.cs.forEach((c, i) => { p[c.id] = c.vals[idx[i]]; }); return p; },
+  reset() {
+    this.idx = this.cs.map(c => c.initIdx); this.visited = []; this.moves = 0; this.hinted = false; this.stars = 0; this.hintUntil = 0;
+    clearResult(); this.ui(); this.upd(); this.setLegend();
+    setReadout('Start with the sliders in the highlighted box above the drawing. Every design you try is plotted below.');
+  },
+  setLegend() {
+    const t = this.L.type;
+    if (t === 'rc') setLegend([['Copper wire', FC.cu], ['Neighbor wires', '#f0b58a'], ['Dielectric', FC.sod], ['Ground plane', FC.psi]].concat(this.L.cfg.size ? [['Barrier liner', '#6b5a4a']] : []), ['Amber = coupling C', 'Blue = ground C']);
+    else if (t === 'em') setLegend([['Copper wire', FC.cu], ['Vias', FC.w], ['Dielectric', FC.sod]], ['Arrows = current']);
+    else setLegend([['Wire', FC.cu], ['Driver / load', FC.psi], ['Repeater', FC.w]], ['Triangle size = repeater size']);
+  },
+  ui() {
+    const box = $('#labctl'); box.innerHTML = ''; box.hidden = false; box.classList.add('attn');
+    this.outs = [];
+    const aim = this.L.type === 'em' ? 'the smallest design that still lasts ' + this.L.cfg.years + ' years' : 'the lowest delay';
+    const hd = document.createElement('div'); hd.className = 'lh';
+    hd.innerHTML = '<b>▶ Your controls</b><span>Drag ' + (this.cs.length > 1 ? 'the sliders' : 'the slider') + ' (or press the arrow keys), watch the meters above, and find ' + aim + '.</span>';
+    box.appendChild(hd);
+    this.cs.forEach((c, i) => {
+      const row = document.createElement('div'); row.className = 'lc';
+      const lab = document.createElement('label'); lab.className = 'cl'; lab.textContent = c.label; lab.htmlFor = 'lab-sl-' + i;
+      const sl = document.createElement('input'); sl.type = 'range'; sl.id = 'lab-sl-' + i; sl.min = 0; sl.max = c.vals.length - 1; sl.step = 1; sl.value = this.idx[i];
+      sl.setAttribute('aria-label', c.label);
+      sl.addEventListener('input', () => { const n = +sl.value; if (n !== this.idx[i]) { this.idx[i] = n; this.moves++; this.upd(); } });
+      const rv = document.createElement('div'); rv.className = 'rv';
+      const dn = document.createElement('button'), up = document.createElement('button'), out = document.createElement('output');
+      dn.type = up.type = 'button'; dn.className = up.className = 'stp'; dn.textContent = '−'; up.textContent = '+';
+      dn.setAttribute('aria-label', 'Decrease ' + c.label); up.setAttribute('aria-label', 'Increase ' + c.label);
+      dn.addEventListener('click', () => this.step(i, -1)); up.addEventListener('click', () => this.step(i, 1));
+      rv.appendChild(dn); rv.appendChild(out); rv.appendChild(up);
+      row.appendChild(lab); row.appendChild(sl); row.appendChild(rv); box.appendChild(row); this.outs.push({ out, dn, up, sl });
+    });
+  },
+  step(i, dir) {
+    const c = this.cs[i], n = Math.max(0, Math.min(c.vals.length - 1, this.idx[i] + dir));
+    if (n === this.idx[i]) return;
+    this.idx[i] = n; this.moves++; this.upd();
+  },
+  cur() { return this.grid.find(g => g.idx.every((v, i) => v === this.idx[i])); },
+  upd() {
+    const g = this.cur(), L = this.L, c = this.cs;
+    this.outs.forEach((o, i) => { o.out.textContent = labFmt(c[i], c[i].vals[this.idx[i]], L); o.sl.value = this.idx[i]; o.dn.disabled = this.idx[i] <= 0; o.up.disabled = this.idx[i] >= c[i].vals.length - 1; });
+    if (this.moves > 0) $('#labctl').classList.remove('attn');
+    const key = this.idx.join(',');
+    if (this.moves > 0 && !this.visited.some(v => v.key === key)) this.visited.push({ key, idx: this.idx.slice(), obj: g.obj, ok: g.ok });
+    let m = '';
+    if (L.type === 'rc') {
+      m = meter('Resistance', fmtR(g.R), '', g.R / this.mx.R, COL.cu) + meter('Capacitance', g.C.toFixed(0) + ' fF', '', g.C / this.mx.C, COL.e) +
+        meter('RC delay', g.obj.toFixed(0) + ' ps', g.textbook ? '(textbook ' + g.textbook.toFixed(0) + ' ps)' : '', g.obj / this.mx.obj, g.ok ? COL.good : COL.warn);
+    } else if (L.type === 'em') {
+      const cap = Math.max(...this.grid.map(q => Math.max(q.lw, q.lv)), 1), tgt = L.cfg.years;
+      m = meter('Wire life (0.1 % fail)', g.lw.toFixed(1) + ' yr', 'J = ' + g.Jw.toFixed(2) + ' MA/cm²', Math.min(1, g.lw / (tgt * 2.5)), g.lw >= tgt ? COL.good : COL.bad, 1 / 2.5) +
+        meter('Via life (0.1 % fail)', g.lv.toFixed(1) + ' yr', 'J = ' + g.Jv.toFixed(2) + ' MA/cm²', Math.min(1, g.lv / (tgt * 2.5)), g.lv >= tgt ? COL.good : COL.bad, 1 / 2.5) +
+        meter('Area cost', g.obj.toFixed(1), '(width + \u00BD per via)', g.obj / this.mx.obj, COL.e);
+    } else {
+      m = meter('Total delay', g.obj.toFixed(0) + ' ps', '', g.obj / this.mx.obj, g.ok ? COL.good : COL.warn) +
+        meter('Segment length', g.seg.toFixed(0) + ' µm', '(' + (this.cs[0] ? this.idx[0] + 1 : 1) + ' segments)', g.seg / L.cfg.L, COL.e) + (L.cfg.area != null ? meter('Repeater area', g.area + ' / ' + L.cfg.area, '', g.area / L.cfg.area, g.ok ? COL.e : COL.bad) : '');
+    }
+    setMeters(m);
+    if (!g.ok) setReadout(g.why.join(' ')); else if (this.moves > 0) setReadout(this.info(g));
+    /* scoring */
+    if (this.moves > 0 && g.ok && this.best) {
+      const ratio = g.obj / this.best.obj, th = L.stars || [1.01, 1.05, 1.2];
+      let s = ratio <= th[0] ? 3 : ratio <= th[1] ? 2 : ratio <= th[2] ? 1 : 0;
+      if (this.hinted) s = Math.min(s, 2);
+      if (s !== this.stars) { this.stars = s; if (s > 0) saveStars(L.id, s); }
+      if (s > 0) { this.won = true; showResult(s, this.title(g), '<span>' + this.verdict(g, ratio) + ' ' + L.win + '</span>'); } else clearResult();
+    } else if (this.stars && !g.ok) { this.stars = 0; clearResult(); }
+  },
+  title(g) { const t = this.L.type; return t === 'em' ? 'Lasts ' + this.L.cfg.years + ' years' : 'Delay ' + g.obj.toFixed(0) + ' ps'; },
+  verdict(g, ratio) {
+    const b = this.best, bl = this.L.type === 'em' ? 'cost ' + b.obj.toFixed(1) : b.obj.toFixed(0) + ' ps';
+    return (ratio <= 1.0005 ? 'This is the best possible design.' : 'The best possible is ' + bl + ' (yours is ' + ((ratio - 1) * 100).toFixed(1) + '% worse).');
+  },
+  info(g) {
+    const L = this.L;
+    if (L.type === 'rc') return 'S = ' + g.S.toFixed(0) + ' nm · R = ' + fmtR(g.R) + ' · C = ' + g.C.toFixed(0) + ' fF (ground ' + g.Cg.toFixed(0) + ' + coupling ' + (g.C - g.Cg).toFixed(0) + ') · delay ≈ 0.38·R·C = <b>' + g.obj.toFixed(0) + ' ps</b>' + (L.cfg.kTable ? ' · k = ' + g.k + (g.rfac > 1 ? ', R ×' + g.rfac.toFixed(2) : '') : '');
+    if (L.type === 'em') return 'Wire: J = I/(W·T) = ' + g.Jw.toFixed(2) + ' MA/cm² → ' + g.lw.toFixed(1) + ' yr · Vias: J = ' + g.Jv.toFixed(2) + ' MA/cm² → ' + g.lv.toFixed(1) + ' yr · the weaker one sets the life: <b>' + Math.min(g.lw, g.lv).toFixed(1) + ' yr</b>';
+    return (this.idx[0]) + ' repeaters → ' + (this.idx[0] + 1) + ' segments of ' + g.seg.toFixed(0) + ' µm · each stage ' + g.per.toFixed(0) + ' ps · total <b>' + g.obj.toFixed(0) + ' ps</b>';
+  },
+  hint() {
+    if (!this.best) return;
+    let bi = -1, bd = 0;
+    this.cs.forEach((c, i) => { const d = Math.abs(this.best.idx[i] - this.idx[i]) / Math.max(1, c.vals.length - 1); if (this.best.idx[i] !== this.idx[i] && d > bd) { bd = d; bi = i; } });
+    if (bi < 0) { setReadout('Your settings already match the best design.'); return; }
+    this.hinted = true; this.hintUntil = performance.now() + 3500;
+    setReadout('Hint: try <b>' + (this.best.idx[bi] > this.idx[bi] ? 'raising' : 'lowering') + '</b> the <b>' + this.cs[bi].label.toLowerCase() + '</b>.');
+  },
+  key(ev) {
+    const k = ev.key, two = this.cs.length > 1;
+    if (k === 'ArrowLeft') { this.step(0, -1); return true; }
+    if (k === 'ArrowRight') { this.step(0, 1); return true; }
+    if (k === 'ArrowDown') { this.step(two ? 1 : 0, -1); return true; }
+    if (k === 'ArrowUp') { this.step(two ? 1 : 0, 1); return true; }
+    return false;
+  },
+  /* ----- drawing ----- */
+  tag(c, txt, x, y, align) {
+    c.save(); c.font = '600 11px ' + FM; const w = c.measureText(txt).width + 10; const lx = align === 'center' ? x - w / 2 : align === 'right' ? x - w : x;
+    c.fillStyle = 'rgba(249,233,225,.95)'; c.strokeStyle = COL.cu; c.lineWidth = 1; c.beginPath(); c.roundRect(lx, y - 9, w, 18, 3); c.fill(); c.stroke();
+    c.fillStyle = COL.cu; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(txt, lx + 5, y + 0.5); c.restore();
+  },
+  dash(c, x, y, w, h) { c.save(); c.setLineDash([6, 4]); c.strokeStyle = COL.cu; c.lineWidth = 2; c.strokeRect(x, y, w, h); c.restore(); },
+  arrow(c, x1, y1, x2, y2, col) {
+    c.save(); c.strokeStyle = col; c.fillStyle = col; c.lineWidth = 1.4; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+    const a = Math.atan2(y2 - y1, x2 - x1);
+    [[x2, y2, a], [x1, y1, a + Math.PI]].forEach(([x, y, t]) => { c.beginPath(); c.moveTo(x, y); c.lineTo(x - 7 * Math.cos(t - 0.4), y - 7 * Math.sin(t - 0.4)); c.lineTo(x - 7 * Math.cos(t + 0.4), y - 7 * Math.sin(t + 0.4)); c.closePath(); c.fill(); });
+    c.restore();
+  },
+  draw(t) {
+    const c = ctx, W = V.W, H = V.H, L = this.L, g = this.cur(), narrow = W < 640;
+    c.clearRect(0, 0, W, H); c.fillStyle = FC.paper; c.fillRect(0, 0, W, H);
+    const zh = narrow ? 270 : 270, zw = narrow ? W - 16 : Math.round(W * 0.6);
+    c.save(); c.beginPath(); c.rect(0, 0, W, zh); c.clip();
+    if (L.type === 'rc') this.drawRC(c, 8, 8, zw, zh - 16, g);
+    else if (L.type === 'em') this.drawEM(c, 8, 8, zw, zh - 16, g);
+    else this.drawRep(c, 8, 8, W - 16, zh - 16, g);
+    c.restore();
+    if (!narrow && L.type !== 'rep') this.drawFormula(c, zw + 24, 20, W - zw - 40, g);
+    this.drawPlot(c, 8, zh + 6, W - 16, H - zh - 14);
+  },
+  drawFormula(c, x, y, w, g) {
+    const L = this.L; c.textAlign = 'left'; c.textBaseline = 'top'; c.fillStyle = FC.ink; c.font = '600 12px ' + FD;
+    const lines = [];
+    if (L.type === 'rc') {
+      lines.push(['Resistance', 'R = ρ · L / (W · T)'], ['', '= ' + fmtR(g.R)], ['Capacitance', 'C = Cₕ + 2 · 2 · C𝒸'.replace('Cₕ', 'Cg').replace('C𝒸', 'Cc')], ['', '= ' + g.Cg.toFixed(0) + ' + ' + (g.C - g.Cg).toFixed(0) + ' = ' + g.C.toFixed(0) + ' fF'], ['Delay', 't ≈ 0.38 · R · C'], ['', '= ' + g.obj.toFixed(0) + ' ps']);
+      if (L.cfg.size) lines.push(['Resistivity', 'ρ = ' + (g.rho * 100).toFixed(2) + ' µΩ·cm (bulk 1.72)']);
+    } else {
+      lines.push(['Current density', 'J = I / (W · T)'], ['', 'wire ' + g.Jw.toFixed(2) + ' MA/cm²'], ['', 'via  ' + g.Jv.toFixed(2) + ' MA/cm²'], ['Lifetime', 'MTTF ∝ J⁻² · e^(Ea/kT)'], ['', 'wire ' + g.lw.toFixed(1) + ' yr, via ' + g.lv.toFixed(1) + ' yr'], ['Operating', L.cfg.I + ' mA at ' + L.cfg.Tc + ' °C, ' + L.cfg.years + ' yr goal']);
+    }
+    let yy = y;
+    lines.forEach(([h, tx]) => { if (h) { yy += 6; c.fillStyle = COL.cu; c.font = '500 10px ' + FM; c.fillText(h.toUpperCase(), x, yy); yy += 15; } c.fillStyle = FC.ink; c.font = '400 12px ' + FM; c.fillText(tx, x, yy); yy += 17; });
+  },
+  drawRC(c, x0, y0, w, h, g) {
+    const L = this.L, cf = L.cfg, p = this.pOf(this.idx), W = p.W, S = g.S, P = cf.P;
+    const s = Math.min((w - 30) / ((w < 600 ? 5.9 : 4.4) * P), (h - 62) / (cf.T + cf.h + 30)), cx = x0 + w / 2, gy = y0 + h - 28, wb = gy - cf.h * s, wt = wb - cf.T * s;
+    const diel = c, light = Math.round(93 - (g.k - 1.8) * 4.5);
+    c.fillStyle = 'hsl(205,28%,' + Math.max(76, Math.min(95, light)) + '%)'; c.fillRect(x0, y0 + 14, w, gy - y0 - 14);
+    c.fillStyle = FC.psi; c.fillRect(x0, gy, w, 14); c.fillStyle = FC.ink; c.font = '400 10px ' + FM; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText('ground plane (below)', x0 + 6, gy + 7);
+    const dEl = p.d == null ? 0 : p.d;
+    if (cf.names && dEl === 3) { c.fillStyle = 'rgba(255,255,255,.55)'; for (let i = 0; i < 90; i++) { const q = rng(i * 7 + 3); c.beginPath(); c.arc(x0 + 6 + q() * (w - 12), y0 + 22 + q() * (gy - y0 - 28), 2.2, 0, 6.3); c.fill(); } }
+    const wx = i => cx + i * P * s - W * s / 2;
+    if (cf.names && dEl === 4) { c.fillStyle = '#fff'; c.strokeStyle = '#8892b8'; c.lineWidth = 1; c.setLineDash([3, 3]); for (let i = -2; i < 2; i++) { const ax = wx(i) + W * s, aw = (P - W) * s; c.fillRect(ax, wt - 4, aw, wb - wt + 8); c.strokeRect(ax + .5, wt - 3.5, aw - 1, wb - wt + 7); } c.setLineDash([]); }
+    for (let i = -2; i <= 2; i++) {
+      const x = wx(i), ww = W * s, hh = cf.T * s, mid = i === 0;
+      if (cf.size) { const tb = p.tb * 2.2; c.fillStyle = '#6b5a4a'; c.fillRect(x, wt, ww, hh); c.fillStyle = mid ? FC.cu : '#f0b58a'; c.fillRect(x + tb, wt, Math.max(1, ww - 2 * tb), Math.max(1, hh - tb)); }
+      else { c.fillStyle = mid ? FC.cu : '#f0b58a'; c.fillRect(x, wt, ww, hh); }
+      c.strokeStyle = FC.ink; c.lineWidth = 1; c.strokeRect(x + .5, wt + .5, ww - 1, hh - 1);
+    }
+    this.dash(c, wx(0) - 4, wt - 4, W * s + 8, cf.T * s + 8);
+    /* dimensions */
+    const dim = (x1, x2, y, txt, col) => { this.arrow(c, x1, y, x2, y, col || FC.ink); c.fillStyle = col || FC.ink; c.font = '500 11px ' + FM; c.textAlign = 'center'; c.textBaseline = 'bottom'; c.fillText(txt, (x1 + x2) / 2, y - 3); };
+    dim(wx(0), wx(0) + W * s, wt - 14, 'W ' + W + ' nm');
+    this.tag(c, 'you set the width', cx, wt - 40, 'center');
+    dim(wx(0) + W * s, wx(1), wb + 18, 'S ' + S + ' nm', '#b45309');
+    this.arrow(c, wx(2) + W * s + 12, wb, wx(2) + W * s + 12, gy, '#2a4a8a');
+    c.fillStyle = '#2a4a8a'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText('h ' + cf.h + ' nm', wx(2) + W * s + 18, (wb + gy) / 2);
+    c.fillStyle = FC.ink; c.fillText('T ' + cf.T + ' nm', wx(2) + W * s + 18, (wt + wb) / 2);
+    c.fillStyle = '#b45309'; c.textAlign = 'center'; c.textBaseline = 'top'; c.font = '600 11px ' + FM; c.fillText('Cc', (wx(0) + W * s + wx(1)) / 2, wt + (cf.T * s) / 2 - 16); c.fillText('Cc', (wx(-1) + W * s + wx(0)) / 2, wt + (cf.T * s) / 2 - 16);
+    c.fillStyle = '#2a4a8a'; c.fillText('Cg', cx, (wb + gy) / 2 - 6);
+    c.fillStyle = FC.ink; c.font = '600 11px ' + FD; c.textAlign = 'left'; c.textBaseline = 'top';
+    c.fillText(cf.names ? 'Dielectric: ' + cf.names[dEl] + ' (k = ' + g.k + ')' : 'Dielectric k = ' + cf.k + ' · pitch ' + P + ' nm · length ' + cf.L + ' µm', x0 + 8, y0 + 18);
+    if (cf.names) this.tag(c, 'you choose the dielectric', x0 + 8, y0 + 40, 'left');
+    if (cf.size) this.tag(c, 'you set the barrier: ' + p.tb + ' nm', x0 + 8, y0 + 40, 'left');
+  },
+  drawEM(c, x0, y0, w, h, g) {
+    const L = this.L, cf = L.cfg, p = this.pOf(this.idx), s = Math.min((w - 60) / 560, (h - 130) / (cf.T + 40)), cx = x0 + w / 2;
+    c.fillStyle = FC.sod; c.fillRect(x0, y0 + 14, w, h - 14);
+    const wt = y0 + 56, ww = p.W * s, hh = cf.T * s;
+    c.fillStyle = FC.cu; c.fillRect(cx - ww / 2, wt, ww, hh); c.strokeStyle = FC.ink; c.lineWidth = 1; c.strokeRect(cx - ww / 2 + .5, wt + .5, ww - 1, hh - 1);
+    /* current: dots drifting through the wire, drift speed scales with J */
+    const T = performance.now() / 1000, sp = 18 + g.Jw * 14;
+    c.fillStyle = FC.ink; for (let i = 0; i < 14; i++) { const q = rng(i + 11), px = ((q() * 300 + T * sp) % ww) + cx - ww / 2, py = wt + 6 + q() * Math.max(1, hh - 12); c.beginPath(); c.arc(px, py, 1.7, 0, 6.3); c.fill(); }
+    this.dash(c, cx - ww / 2 - 4, wt - 4, ww + 8, hh + 8);
+    c.fillStyle = FC.ink; c.font = '500 11px ' + FM; c.textAlign = 'center'; c.textBaseline = 'bottom'; c.fillText('W ' + p.W + ' nm  ·  T ' + cf.T + ' nm  ·  I = ' + cf.I + ' mA', cx, wt - 6);
+    if (w < 600) this.tag(c, 'you set the width', cx, wt - 28, 'center'); else this.tag(c, 'you set the width', cx + ww / 2 + 14, wt + hh / 2, 'left');
+    this.arrow(c, cx - ww / 2 - 26, wt + hh / 2, cx - ww / 2 - 4, wt + hh / 2, COL.cu);
+    /* via array underneath */
+    const vw = cf.via * s * 1.6, gap = 7, tot = p.n * vw + (p.n - 1) * gap, vy = wt + hh + 14, vh = 36;
+    c.fillStyle = FC.psi; c.fillRect(cx - Math.max(tot, ww) / 2 - 12, vy + vh, Math.max(tot, ww) + 24, 12);
+    for (let i = 0; i < p.n; i++) { const vx = cx - tot / 2 + i * (vw + gap); c.fillStyle = FC.w; c.fillRect(vx, vy, vw, vh); c.strokeStyle = FC.ink; c.strokeRect(vx + .5, vy + .5, vw - 1, vh - 1); }
+    this.dash(c, cx - tot / 2 - 4, vy - 4, tot + 8, vh + 8);
+    if (w < 600) this.tag(c, 'you set the via count', cx, vy + vh + 40, 'center'); else this.tag(c, 'you set the via count', cx + tot / 2 + 14, vy + vh / 2, 'left');
+    c.fillStyle = FC.ink; c.textBaseline = 'top'; c.fillText(p.n + ' via' + (p.n > 1 ? 's' : '') + ' of ' + cf.via + ' nm in parallel', cx, vy + vh + 16);
+    const hot = g.lw < cf.years ? '#b00020' : '#0a7a3d', hv = g.lv < cf.years ? '#b00020' : '#0a7a3d';
+    const nl = w < 600, lx = nl ? x0 + w - 10 : x0 + 10; c.textAlign = nl ? 'right' : 'left'; c.font = '600 11px ' + FM; c.textBaseline = 'bottom'; c.fillStyle = hot; const ly = nl ? y0 + 22 : y0 + h - 22; c.fillText('wire ' + g.lw.toFixed(1) + ' yr', lx, ly); c.fillStyle = hv; c.fillText('vias ' + g.lv.toFixed(1) + ' yr', lx, ly + 16);
+  },
+  drawRep(c, x0, y0, w, h, g) {
+    const L = this.L, cf = L.cfg, p = this.pOf(this.idx), N = p.N, hs = p.h == null ? 1 : p.h, y = y0 + h * 0.46, xa = x0 + 56, xb = x0 + w - 56;
+    c.fillStyle = FC.sod; c.fillRect(x0, y0, w, h);
+    c.strokeStyle = FC.cu; c.lineWidth = 5; c.beginPath(); c.moveTo(xa, y); c.lineTo(xb, y); c.stroke();
+    c.fillStyle = FC.psi; c.strokeStyle = FC.ink; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(xa - 44, y - 18); c.lineTo(xa, y); c.lineTo(xa - 44, y + 18); c.closePath(); c.fill(); c.stroke();
+    c.fillRect(xb, y - 14, 36, 28); c.strokeRect(xb + .5, y - 13.5, 35, 27);
+    c.fillStyle = FC.ink; c.font = '500 11px ' + FM; c.textAlign = 'center'; c.textBaseline = 'top'; c.fillText('driver', xa - 30, y + 24); c.fillText('load', xb + 18, y + 24);
+    for (let i = 1; i <= N; i++) {
+      const rx = xa + (xb - xa) * i / (N + 1), sz = 10 + Math.sqrt(hs) * 6;
+      c.fillStyle = FC.w; c.beginPath(); c.moveTo(rx - sz * 0.7, y - sz); c.lineTo(rx + sz * 0.7, y); c.lineTo(rx - sz * 0.7, y + sz); c.closePath(); c.fill(); c.stroke();
+      this.dash(c, rx - sz * 0.7 - 4, y - sz - 4, sz * 1.4 + 8, sz * 2 + 8);
+    }
+    for (let i = 0; i <= N; i++) {
+      const sx = xa + (xb - xa) * i / (N + 1), ex = xa + (xb - xa) * (i + 1) / (N + 1);
+      if (N <= 9) { this.arrow(c, sx + 6, y + h * 0.26, ex - 6, y + h * 0.26, '#4a5662'); if (ex - sx > 54) { c.fillStyle = '#4a5662'; c.textAlign = 'center'; c.textBaseline = 'top'; c.font = '400 10px ' + FM; c.fillText(g.seg.toFixed(0) + ' µm', (sx + ex) / 2, y + h * 0.26 + 6); } }
+    }
+    this.tag(c, p.h != null ? 'you set how many and how big' : 'you set how many', x0 + w / 2, y0 + h - 14, 'center');
+    c.fillStyle = FC.ink; c.font = '600 12px ' + FM; c.textAlign = 'left'; c.textBaseline = 'top';
+    const nar = w < 600;
+    c.font = '600 ' + (nar ? 11 : 12) + 'px ' + FM;
+    c.fillText(N + ' repeater' + (N === 1 ? '' : 's') + (p.h != null ? ' ×' + hs : '') + ' · ' + (N + 1) + ' segment' + (N === 0 ? '' : 's') + ' · ' + g.obj.toFixed(0) + ' ps', x0 + 12, y0 + 14);
+    if (!nar) { c.font = '400 11px ' + FM; c.fillStyle = '#4a5662'; c.fillText('each stage: 0.69·Rᵈ(Cʷ+Cᵢ) + 0.69·RʷCᵢ + 0.38·RʷCʷ + tₚ', x0 + 12, y0 + 34); }
+  },
+  drawPlot(c, x, y, w, h) {
+    const L = this.L, L0 = x + 58, R0 = x + w - 14, T0 = y + 28, B0 = y + h - 30, em = L.type === 'em';
+    c.fillStyle = COL.panel; c.fillRect(x, y, w, h); c.strokeStyle = COL.line; c.strokeRect(x + .5, y + .5, w - 1, h - 1);
+    const cc = this.cs[0], vals = cc.vals;
+    c.fillStyle = COL.mute; c.font = '500 11px ' + FM; c.textAlign = 'left'; c.textBaseline = 'middle';
+    c.fillText(em ? (V.W < 640 ? 'Lifetime by wire width (your via count)' : 'Lifetime by wire width, at your via count (the weaker of wire and vias)') : (this.cs.length > 1 ? 'Best delay by ' : 'Delay by ') + cc.label.toLowerCase() + (V.W < 640 ? ' · dots = tries' : ' · your tries are the dots'), x + 12, y + 13);
+    const xp = i => L0 + (vals.length === 1 ? 0.5 : i / (vals.length - 1)) * (R0 - L0);
+    const g = this.cur();
+    let yp, curve, lo, hi, fmtY = v => (v < 10 ? v.toFixed(1) : v.toFixed(0)), ticks;
+    if (em) {
+      curve = vals.map((v, i) => { const q = this.grid.find(gg => gg.idx[0] === i && gg.idx[1] === this.idx[1]); return Math.min(q.lw, q.lv); });
+      lo = 1; hi = 100; const ly = v => Math.log(Math.max(lo, Math.min(hi, v)) / lo) / Math.log(hi / lo);
+      yp = v => B0 - ly(v) * (B0 - T0); ticks = [1, 10, 100]; fmtY = v => v + ' yr';
+    } else {
+      curve = vals.map((v, i) => { let b = null; this.grid.forEach(q => { if (q.idx[0] === i && q.ok && (b === null || q.obj < b)) b = q.obj; }); return b; });
+      const fin = curve.filter(v => v != null), vis = this.visited.map(v => v.obj).concat([g.obj]);
+      lo = Math.min(Math.min(...fin) * 0.92, Math.min(...vis) * 0.95); hi = Math.max(Math.min(Math.max(...fin), this.best.obj * 2.1), Math.max(...vis)) * 1.04;
+      yp = v => B0 - (Math.min(Math.max(v, lo), hi) - lo) / (hi - lo) * (B0 - T0); ticks = [lo, (lo + hi) / 2, hi];
+    }
+    c.strokeStyle = COL.line; c.lineWidth = 1; c.fillStyle = COL.mute; c.font = '400 10px ' + FM; c.textAlign = 'right'; c.textBaseline = 'middle';
+    ticks.forEach(v => { const yy = yp(v); c.beginPath(); c.moveTo(L0, yy); c.lineTo(R0, yy); c.stroke(); c.fillText(fmtY(v), L0 - 6, yy); });
+    c.textAlign = 'center'; c.textBaseline = 'top';
+    const stp = Math.max(1, Math.ceil((vals.length - 1) / (W6() - 1))); for (let i = 0; i < vals.length; i += stp) c.fillText(labFmt(cc, vals[i], L).replace(' nm', ''), xp(i), B0 + 6);
+    c.fillText(cc.label + (cc.unit ? ' (' + cc.unit.trim() + ')' : ''), (L0 + R0) / 2, B0 + 18);
+    if (em) {
+      const ty = yp(L.cfg.years); c.save(); c.setLineDash([6, 4]); c.strokeStyle = COL.warn; c.lineWidth = 1.5; c.beginPath(); c.moveTo(L0, ty); c.lineTo(R0, ty); c.stroke(); c.restore();
+      c.fillStyle = COL.warn; c.textAlign = 'right'; c.textBaseline = 'bottom'; c.font = '500 10px ' + FM; c.fillText(L.cfg.years + ' yr goal', R0, ty - 4);
+      c.strokeStyle = COL.cu; c.lineWidth = 2; c.beginPath(); curve.forEach((v, i) => { const px = xp(i), py = yp(v); if (i === 0) c.moveTo(px, py); else c.lineTo(px, py); }); c.stroke();
+    } else if (this.stars === 3) {
+      c.strokeStyle = COL.cu; c.lineWidth = 2; c.beginPath(); let pen = false;
+      curve.forEach((v, i) => { if (v == null) { pen = false; return; } const px = xp(i), py = yp(v); if (!pen) { c.moveTo(px, py); pen = true; } else c.lineTo(px, py); }); c.stroke();
+      const bi = this.best.idx[0]; c.fillStyle = COL.good; c.beginPath(); c.arc(xp(bi), yp(this.best.obj), 5, 0, 6.3); c.fill();
+      c.fillStyle = COL.good; c.textAlign = 'center'; c.textBaseline = 'bottom'; c.font = '600 10px ' + FM; c.fillText('best', xp(bi), yp(this.best.obj) - 8);
+    }
+    if (!em) this.visited.forEach(v => {
+      const px = xp(v.idx[0]), py = yp(v.obj); c.beginPath(); c.arc(px, py, 4.5, 0, 6.3);
+      if (v.ok) { c.fillStyle = COL.fg; c.fill(); } else { c.strokeStyle = COL.bad; c.lineWidth = 1.5; c.stroke(); }
+    });
+    const px = xp(this.idx[0]), py = em ? yp(Math.min(g.lw, g.lv)) : yp(g.obj);
+    c.strokeStyle = g.ok ? COL.cu : COL.bad; c.lineWidth = 2; c.beginPath(); c.arc(px, py, 8, 0, 6.3); c.stroke();
+    if (!em && V.W >= 640) { c.fillStyle = COL.mute; c.font = '400 10px ' + FM; c.textAlign = 'right'; c.textBaseline = 'bottom'; c.fillText('● feasible  ○ breaks a rule', R0, T0 - 4); }
+  }
+};
+function W6() { return V.W < 640 ? 5 : 9; }
+
+/* ---------- boot ---------- */
+renderRail();
+startLevel(0);
+/* when embedded in another page, tell it how tall the game is so the frame fits exactly */
+if (document.documentElement.classList.contains('embed')) { const hw = document.getElementById('how'); if (hw) hw.open = false; }
+if (window.parent !== window) {
+  const post = () => parent.postMessage({ eduGame: 'height', h: Math.ceil(document.body.getBoundingClientRect().height) }, '*');
+  new ResizeObserver(post).observe(document.body); window.addEventListener('load', post); post();
+}
+</script>
+
+</body></html>
