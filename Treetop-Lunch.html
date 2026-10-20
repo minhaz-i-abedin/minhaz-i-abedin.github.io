@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;-webkit-text-size-adjust:100%}img{max-width:100%}[hidden]{display:none!important}</style><title>Treetop Lunch</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700&display=swap">
 <style>
 /* Layout: title + scoreboard, one wide savanna scene (the game board), a status line and three animal buttons underneath. Single warm-daylight look on purpose. */
@@ -38,10 +37,11 @@ button.stat[aria-pressed=false] b{color:#a08868}
 svg{display:block;width:100%;height:auto;user-select:none;-webkit-tap-highlight-color:transparent}
 
 /* ---- animal rig ---- */
-.animal{cursor:pointer;outline:none;--step:.78s;--nod:-3deg;--reach:rotate(5deg);--bite:12deg}
-.animal[data-a=big]{--reach:scale(1.1) rotate(-1deg)}
-.animal[data-a=baby]{--step:.56s}
-.animal[data-a=zebra]{--step:.52s;--nod:7deg;--reach:rotate(-14deg);--bite:-12deg}
+/* Legs, shins, necks and heads each sit inside a group placed at their joint,
+   so they rotate about their own origin (shoulder/hip, knee/hock, neck base, poll). */
+.animal{cursor:pointer;outline:none;--step:.9s;--nod:2.5deg;--reach:rotate(-12deg) scale(1.08);--hr:-28deg;--bite:-4deg}
+.animal[data-a=baby]{--step:.72s}
+.animal[data-a=zebra]{--step:.62s;--nod:4deg;--reach:rotate(16deg);--hr:8deg;--bite:5deg}
 .animal.busy{cursor:default}
 .mover{transition-property:transform;transition-timing-function:cubic-bezier(.4,.1,.5,1)}
 .flip{transition:transform .5s ease-in-out}
@@ -51,33 +51,43 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-tap-highlight-
 .animal:focus-visible .shake{filter:drop-shadow(0 0 3px #1d5fa8) drop-shadow(0 0 3px #1d5fa8)}
 .animal.sel .shake{filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 9px #fff6c9)}
 .shake.no{animation:no .5s}
-.leg,.tail,.neck,.head,.jaw,.eye,.ear{transform-box:fill-box}
-.leg{transform-origin:50% 0}
+.leg,.shin,.neck,.head{transform-box:view-box;transform-origin:0 0}
+.tail,.jaw,.eye,.ear,.tongue{transform-box:fill-box}
+.neck,.head{transition:transform .55s ease-in-out}
 .tail{transform-origin:100% 0;animation:swish 2.4s ease-in-out infinite alternate}
-.neck{transform-origin:18% 95%;transition:transform .55s ease-in-out}
-.head{transform-origin:20% 79%}
-.animal[data-a=zebra] .neck,.animal[data-a=zebra] .head{transform-origin:17% 24%}
 .jaw{transform-origin:0% 50%}
-.eye{transform-origin:center;animation:blink 4.6s infinite}
+.eye{transform-origin:center;animation:blink 4.6s infinite;transition:transform .3s ease}
+/* contented, half-closed eyes while eating */
+.bite .eye,.chew .eye{animation:none;transform:scaleY(.35)}
 .ear{transform-origin:100% 50%;animation:flick 6s infinite}
+.animal[data-a=zebra] .ear{transform-origin:100% 100%}
+.tongue{transform-origin:0% 100%;transform:scale(0)}
 .animal[data-a=baby] .eye{animation-delay:-1.7s}.animal[data-a=zebra] .eye{animation-delay:-3.1s}
 .animal[data-a=baby] .tail{animation-delay:-.9s}.animal[data-a=zebra] .tail{animation-delay:-1.6s;animation-duration:1.7s}
+/* walking: each leg swings from the shoulder/hip; the lower leg folds only while the hoof is off the ground.
+   --d is each leg's place in the stride, set per animal from its real gait */
 .walking .shake{animation:bob calc(var(--step) / 2) ease-in-out infinite alternate}
-.walking .leg.a{animation:stride var(--step) ease-in-out infinite}
-.walking .leg.b{animation:stride var(--step) ease-in-out infinite;animation-delay:calc(var(--step) / -2)}
+.walking .leg{animation:swing var(--step) ease-in-out infinite;animation-delay:calc(var(--step) * var(--d))}
+.walking .fore .shin{animation:flexF var(--step) linear infinite;animation-delay:calc(var(--step) * var(--d))}
+.walking .hind .shin{animation:flexH var(--step) linear infinite;animation-delay:calc(var(--step) * var(--d))}
 .walking .neck{animation:nod var(--step) ease-in-out infinite}
+.animal[data-a=zebra].walking .neck{animation-duration:calc(var(--step) / 2)}
 .walking .tail{animation:swish calc(var(--step) * 1.5) ease-in-out infinite alternate}
 .reach .neck{transform:var(--reach)}
-.bite .head{animation:bite .62s ease-in-out}
-.bite .jaw,.chew .jaw{animation:jaw .24s ease-in-out infinite alternate}
-.chew .head{animation:munch .48s ease-in-out infinite alternate}
-@keyframes stride{0%,100%{transform:rotate(17deg)}50%{transform:rotate(-17deg)}}
-@keyframes bob{to{transform:translateY(-4px)}}
+.reach .head{transform:rotate(var(--hr))}
+.bite .head{animation:bite .65s ease-in-out}
+.bite .jaw,.chew .jaw{animation:jaw .42s ease-in-out infinite alternate}
+.chew .head{animation:munch .84s ease-in-out infinite alternate}
+.measure,.measure *{transition:none!important;animation:none!important}
+@keyframes swing{0%,100%{transform:rotate(13deg)}50%{transform:rotate(-13deg)}}
+@keyframes flexF{0%{transform:rotate(0)}20%{transform:rotate(62deg)}42%,100%{transform:rotate(0)}}
+@keyframes flexH{0%{transform:rotate(0)}20%{transform:rotate(-44deg)}42%,100%{transform:rotate(0)}}
+@keyframes bob{to{transform:translateY(-3px)}}
 @keyframes nod{50%{transform:rotate(var(--nod))}}
 @keyframes swish{from{transform:rotate(-10deg)}to{transform:rotate(14deg)}}
-@keyframes bite{35%{transform:rotate(var(--bite))}70%{transform:rotate(calc(var(--bite) * -.35))}}
-@keyframes jaw{to{transform:rotate(30deg)}}
-@keyframes munch{to{transform:translateY(1.5px) rotate(2deg)}}
+@keyframes bite{0%,100%{transform:rotate(var(--hr))}50%{transform:rotate(calc(var(--hr) + var(--bite)))}}
+@keyframes jaw{to{transform:rotate(6deg)}}
+@keyframes munch{to{transform:rotate(1.5deg)}}
 @keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
 @keyframes flick{0%,88%,100%{transform:rotate(0)}91%{transform:rotate(-22deg)}94%{transform:rotate(6deg)}}
 @keyframes no{20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
@@ -88,8 +98,8 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-tap-highlight-
 .leaf.eaten,.leaf.claimed{pointer-events:none}
 .leaf.eaten .inner{transform:scale(.15);opacity:0}
 .leaf:hover .inner{transform:scale(1.08)}
-.leaf.tug .inner{animation:tug .26s ease-out}
-@keyframes tug{40%{transform:rotate(-14deg) scale(.94) translateX(-3px)}}
+.leaf.tug .inner{animation:tug .45s ease-in-out}
+@keyframes tug{45%{transform:rotate(-5deg) scale(.97)}}
 .lf{transition:opacity .15s}
 .lf.gone{opacity:0}
 .leaf .ring{opacity:0;fill:none;stroke:#fff;stroke-width:3;stroke-dasharray:7 5}
@@ -137,7 +147,7 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-tap-highlight-
 }
 @media (prefers-reduced-motion:reduce){
   .mover,.flip,.neck{transition-duration:.01s!important}
-  .tail,.eye,.ear,.walking .shake,.walking .leg.a,.walking .leg.b,.walking .neck,.bite .head,.bite .jaw,.chew .jaw,.chew .head,.shake.no,.leaf.sel .ring,.leaf.tug .inner{animation:none!important}
+  .tail,.eye,.ear,.walking .shake,.walking .leg,.walking .shin,.walking .neck,.bite .head,.bite .tongue,.bite .jaw,.chew .jaw,.chew .head,.shake.no,.leaf.sel .ring,.leaf.tug .inner{animation:none!important}
 }
 </style>
 </head>
@@ -166,10 +176,24 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-tap-highlight-
         <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="#f6c66e"/><stop offset=".75" stop-color="#fde7bd"/>
         </linearGradient>
-        <clipPath id="zclip">
-          <ellipse cx="0" cy="-88" rx="55" ry="26"/>
-          <polygon points="28,-104 62,-142 80,-130 50,-80"/>
-        </clipPath>
+        <!-- giraffe leg patches shrink and fade out towards the knee and hock -->
+        <linearGradient id="gFade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#f4e7cc" stop-opacity="0"/><stop offset=".5" stop-color="#f4e7cc" stop-opacity=".15"/><stop offset=".95" stop-color="#f4e7cc" stop-opacity="1"/>
+        </linearGradient>
+        <!-- giraffe belly and throat are paler than the back -->
+        <linearGradient id="gBelly" x1="0" y1="0" x2="0" y2="1">
+          <stop offset=".78" stop-color="#f7ecd6" stop-opacity="0"/><stop offset="1" stop-color="#f7ecd6" stop-opacity=".5"/>
+        </linearGradient>
+        <linearGradient id="gThroat" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#3a1f08" stop-opacity=".15"/><stop offset=".5" stop-color="#3a1f08" stop-opacity="0"/><stop offset="1" stop-color="#f7ecd6" stop-opacity=".45"/>
+        </linearGradient>
+        <!-- soft light from above, shade underneath -->
+        <linearGradient id="gShade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fffbe9" stop-opacity=".22"/><stop offset=".45" stop-color="#fffbe9" stop-opacity="0"/><stop offset="1" stop-color="#3a1f08" stop-opacity=".32"/>
+        </linearGradient>
+        <linearGradient id="gShadeX" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#3a1f08" stop-opacity=".18"/><stop offset=".5" stop-color="#3a1f08" stop-opacity="0"/><stop offset="1" stop-color="#fffbe9" stop-opacity=".15"/>
+        </linearGradient>
       </defs>
       <rect width="900" height="500" fill="url(#sky)"/>
       <circle cx="430" cy="78" r="44" fill="#fff5d6" opacity=".9"/>
@@ -194,6 +218,7 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-tap-highlight-
         <path d="M705,296 L792,240" stroke-width="9"/>
       </g>
       <polygon points="688,478 714,478 707,300 703,180 697,180 693,300" fill="#6b4426"/>
+      <g id="thorns" aria-hidden="true"></g>
       <g fill="#4e6b25">
         <ellipse cx="600" cy="104" rx="82" ry="27"/>
         <ellipse cx="700" cy="88" rx="96" ry="31"/>
@@ -230,11 +255,11 @@ svg{display:block;width:100%;height:auto;user-select:none;-webkit-tap-highlight-
   <p class="status" id="status" aria-live="polite">Tap an animal, then tap the leaves it can reach.</p>
 
   <div class="picker" role="group" aria-label="Choose an animal">
-    <button class="pick" type="button" id="pick-big" data-a="big" aria-pressed="false">Big giraffe<small>about 5.5 m tall</small></button>
-    <button class="pick" type="button" id="pick-baby" data-a="baby" aria-pressed="false">Baby giraffe<small>about 3 m tall</small></button>
-    <button class="pick" type="button" id="pick-zebra" data-a="zebra" aria-pressed="false">Zebra<small>about 1.4 m at the shoulder</small></button>
+    <button class="pick" type="button" id="pick-big" data-a="big" aria-pressed="false">Big giraffe<small>adult bull, about 6 m</small></button>
+    <button class="pick" type="button" id="pick-baby" data-a="baby" aria-pressed="false">Baby giraffe<small>yearling calf, about 3.5 m</small></button>
+    <button class="pick" type="button" id="pick-zebra" data-a="zebra" aria-pressed="false">Zebra<small>about 1.3 m at the shoulder</small></button>
   </div>
-  <p class="facts">The ruler on the right shows height in metres. Adult giraffes browse acacia leaves up to about 5.5 m off the ground, young giraffes take the lower branches, and zebras eat close to the ground.</p>
+  <p class="facts">The ruler on the right shows height in metres, and the animals are drawn to that scale. An adult giraffe stretches its neck and wraps its dark, 45 cm prehensile tongue around acacia leaves up to about 6 m high, working between the thorns. A calf browses the lower branches. Zebras are mostly grazers, but they will nibble leaves from a low bush.</p>
 </main>
 
 <script>
@@ -243,9 +268,9 @@ const NS='http://www.w3.org/2000/svg';
 const $=id=>document.getElementById(id);
 const ZONES=['bush','middle-branch','treetop'];
 const ANIMALS={
-  big:{name:'big giraffe',level:2,home:70,base:460,scale:1,mouthX:136,speed:210,pitch:.8,bubble:[200,24]},
-  baby:{name:'baby giraffe',level:1,home:230,base:460,scale:.6,mouthX:128,speed:190,pitch:1.3,bubble:[292,182]},
-  zebra:{name:'zebra',level:0,home:400,base:470,scale:1,mouthX:98,speed:180,pitch:1.05,bubble:[468,288]}
+  big:{name:'big giraffe',level:2,home:82,base:460,scale:1,mouthX:190,speed:210,pitch:.8,bubble:[232,26]},
+  baby:{name:'baby giraffe',level:1,home:262,base:460,scale:.6,mouthX:112,speed:190,pitch:1.3,bubble:[338,196]},
+  zebra:{name:'zebra',level:0,home:430,base:470,scale:.68,mouthX:72,speed:180,pitch:1.05,bubble:[482,306]}
 };
 const ORDER=['big','baby','zebra'];
 const SPOTS=[
@@ -262,87 +287,257 @@ let t='';
 for(let m=0;m<=6;m++){const y=460-m*PX_M;t+=`<line x1="870" x2="886" y1="${y}" y2="${y}" stroke="#a9834f" stroke-width="2"/><text x="866" y="${y+5}" text-anchor="end">${m} m</text>`;}
 $('ticks').innerHTML=t;
 
-function giraffe(){
-  const coat='#e9ab4a', far='#d39339', spot='#94531f', dark='#4a2c14';
-  const leg=(x,c,ph)=>`<g class="leg ${ph}"><rect x="${x}" y="-142" width="10" height="142" rx="4" fill="${c}"/><rect x="${x}" y="-8" width="10" height="8" rx="2" fill="${dark}"/></g>`;
-  let s=`<g class="tail"><path d="M-68,-162 Q-82,-132 -78,-100" stroke="${spot}" stroke-width="3" fill="none"/><path d="M-83,-104 l5,16 l6,-15z" fill="${dark}"/></g>`;
-  // giraffes pace: both legs on one side swing together
-  s+=leg(-56,far,'a')+leg(30,far,'a');
-  s+=`<g class="neck">
-    <path d="M26,-176 L82,-350 L106,-344 L64,-148Z" fill="${coat}"/>
-    <path d="M28,-180 L84,-354" stroke="${spot}" stroke-width="5" stroke-dasharray="3 3"/>`;
-  [[52,-218,7,9],[62,-256,6,8],[73,-294,6,8],[82,-326,5,6]].forEach(([x,y,rx,ry])=>{s+=`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${spot}"/>`;});
-  s+=`<g class="head">
-      <ellipse class="ear" cx="84" cy="-366" rx="11" ry="4.5" transform="rotate(-25 84 -366)" fill="${far}"/>
-      <rect x="90" y="-392" width="4" height="22" fill="${spot}"/><circle cx="92" cy="-392" r="4" fill="${dark}"/>
-      <rect x="100" y="-390" width="4" height="20" fill="${spot}"/><circle cx="102" cy="-390" r="4" fill="${dark}"/>
-      <ellipse class="jaw" cx="117" cy="-345" rx="11" ry="4.5" fill="#b77a30"/>
-      <ellipse cx="104" cy="-358" rx="25" ry="13" transform="rotate(12 104 -358)" fill="${coat}"/>
-      <ellipse cx="124" cy="-351" rx="10" ry="9" fill="#cf9443"/>
-      <circle cx="128" cy="-354" r="1.8" fill="${dark}"/>
-      <g class="eye"><circle cx="100" cy="-364" r="3.2" fill="${dark}"/><circle cx="101" cy="-365" r="1" fill="#fff"/></g>
-    </g>
-  </g>`;
-  s+=`<ellipse cx="-5" cy="-158" rx="70" ry="36" fill="${coat}"/>`;
-  [[-42,-165,14,10],[-12,-174,12,9],[18,-160,13,10],[-26,-142,11,8],[4,-145,10,7],[-58,-150,8,8],[44,-182,8,7]]
-    .forEach(([x,y,rx,ry])=>{s+=`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${spot}"/>`;});
-  s+=leg(-40,coat,'b')+leg(46,coat,'b');
+// seeded random, so every visit draws the same coat
+function rng(seed){return()=>{seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+// giraffe coat: a few large, softly rounded patches with cream lines between them
+function patches(r,x0,x1,y0,y1,sp,cols){
+  let s='';const rowH=sp*.87;let row=0;
+  for(let y=y0;y<=y1;y+=rowH,row++){
+    for(let x=x0+(row%2?sp/2:0);x<=x1;x+=sp){
+      const cx=x+(r()-.5)*sp*.16, cy=y+(r()-.5)*sp*.16, n=6, rad=sp*.6*(.96+r()*.08);
+      const pts=[];
+      for(let i=0;i<n;i++){const a=i/n*Math.PI*2+(r()-.5)*.35, rr=rad*(.9+r()*.16);
+        pts.push([cx+Math.cos(a)*rr, cy+Math.sin(a)*rr*.92]);}
+      // round every corner: curve through each vertex from one edge midpoint to the next
+      const mid=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2], f=v=>v.toFixed(1);
+      let m=mid(pts[n-1],pts[0]), d=`M${f(m[0])},${f(m[1])}`;
+      for(let i=0;i<n;i++){const p=pts[i], q=mid(p,pts[(i+1)%n]);d+=` Q${f(p[0])},${f(p[1])} ${f(q[0])},${f(q[1])}`;}
+      const c=cols[Math.floor(r()*cols.length)];
+      s+=`<path d="${d}Z" fill="${c}" stroke="#f7ecd6" stroke-width="${f(Math.max(1.4,sp*.085))}" stroke-linejoin="round"/>`;
+    }
+  }
   return s;
 }
+const f1=n=>+n.toFixed(1);
+// Leg segments are drawn from their joint at (0,0) downward.
+// Forearm / gaskin above, cannon + fetlock + pastern below; the hoof sits on y=D.
+function foreUpper(U,w){return `M${-w},0 C${-w},${f1(U*.42)} ${f1(-w*.62)},${f1(U*.76)} ${f1(-w*.54)},${f1(U)} L${f1(w*.54)},${f1(U)} C${f1(w*.62)},${f1(U*.76)} ${w},${f1(U*.42)} ${w},0Z`;}
+function hindUpper(U,w){ // thigh and gaskin slope back to the hock, with the point of the hock behind
+  return `M${-w},0 C${f1(-w*1.1)},${f1(U*.35)} ${f1(-w*1.55)},${f1(U*.72)} ${f1(-w*1.7)},${f1(U-3)} Q${f1(-w*1.8)},${f1(U+3)} ${f1(-w*1.25)},${f1(U+5)} L${f1(-w*.65)},${f1(U+5)} C${f1(-w*.35)},${f1(U*.7)} ${f1(w*.2)},${f1(U*.4)} ${w},0Z`;}
+function lowerSeg(D,w){return `M${f1(-w-.4)},0 L${-w},${f1(D-16)} C${f1(-w-1.5)},${f1(D-13)} ${f1(-w-1.5)},${f1(D-9)} ${f1(-w-.3)},${f1(D-7)} L${f1(w+.3)},${f1(D-7)} C${f1(w+1.5)},${f1(D-9)} ${f1(w+1.5)},${f1(D-13)} ${w},${f1(D-16)} L${f1(w+.4)},0Z`;}
+// giraffes have two-toed (cloven) hooves; zebras have one solid hoof
+const clovenHoof=(D,c)=>`<path d="M-5,${f1(D-7)} L5,${f1(D-7)} L6.6,${f1(D)} L-5.8,${f1(D)}Z" fill="${c}"/><path d="M.6,${f1(D-6.5)} L1,${f1(D)}" stroke="#e7d9bc" stroke-width=".8"/>`;
+const solidHoof=(D,c)=>`<path d="M-4.6,${f1(D-7)} L4.6,${f1(D-7)} L6.8,${f1(D)} L-5.2,${f1(D)}Z" fill="${c}"/>`;
+
+/* ===== Giraffe (reticulated). Ground at y=0, facing right.
+   Adult bull: legs ~2.3 m to the elbow, sloping back from high withers, neck held ~60° up,
+   head angled ~20° down; skin-covered ossicones (bald knobs on a bull, black tufts on a calf),
+   a median boss on the forehead, a short mane, and a dark prehensile tongue for stripping leaves. */
+const G_BODY='M-74,-160 C-76,-178 -64,-190 -44,-192 C-14,-196 18,-210 40,-214 C60,-216 74,-196 73,-170 C72,-150 64,-132 46,-128 C20,-122 -14,-124 -38,-128 C-56,-132 -66,-138 -70,-146 C-73,-150 -74,-155 -74,-160Z';
+const G_HEAD='M0,-9 C4,-15 14,-16 22,-14 C32,-12 42,-9 49,-6 C54,-4 55,4 50,8 C44,11 36,10 30,10 C20,11 10,13 3,10 C-2,7 -3,-4 0,-9Z';
+
+function giraffe(id,o){
+  const ls=o.ls, ns=o.ns, hs=o.hs, calf=o.calf;
+  const r=rng(calf?11:7);
+  const L=150*ls, dy=-150*(ls-1);            // leg length; the body rides higher on a calf's long legs
+  const line=calf?'#f8efdc':'#f7ecd6';
+  const spot=calf?['#d08a48','#d6934f','#c98243']:['#c0763a','#c77f3f','#b96f35'];
+  const headC=calf?'#d8a770':'#d2a068', dark='#2b1a0e', legPale='#efe2c6';
+  const len=190*ns;
+  const NECK=`M-10,-27 C${f1(len*.4)},-23 ${f1(len*.72)},-14 ${f1(len+1)},-11 C${f1(len+9)},-7 ${f1(len+9)},7 ${f1(len+1)},11 C${f1(len*.72)},15 ${f1(len*.4)},22 -10,27Z`;
+  const FU=78*ls, HU=74*ls, FD=L-FU, HD=L-HU-3;
+  let s=`<defs>
+    <clipPath id="gb-${id}"><path d="${G_BODY}"/></clipPath>
+    <clipPath id="gn-${id}"><path d="${NECK}"/></clipPath>
+    <clipPath id="gh-${id}"><path d="${G_HEAD}"/></clipPath>
+    <clipPath id="gfu-${id}"><path d="${foreUpper(FU,8.5)}"/></clipPath>
+    <clipPath id="ghu-${id}"><path d="${hindUpper(HU,10)}"/></clipPath></defs>`;
+  const legPatches={fore:patches(rng(3),-8,8,4,FU*.7,13,spot),hind:patches(rng(5),-14,8,4,HU*.7,13,spot)};
+  const leg=(type,cx,d,far)=>{
+    const fore=type==='fore', U=fore?FU:HU, D=fore?FD:HD;
+    const up=fore?foreUpper(FU,8.5):hindUpper(HU,10);
+    const joint=fore?'0,'+f1(U):'-11,'+f1(U+3);
+    return `<g transform="translate(${cx},${f1(-L)})"${far?' style="filter:brightness(.78)"':''}><g class="leg ${type}" style="--d:${d}">
+      <path d="${up}" fill="${line}"/>
+      <g clip-path="url(#g${fore?'f':'h'}u-${id})">${legPatches[type]}<path d="${up}" fill="url(#gFade)"/></g>
+      <g transform="translate(${joint})"><g class="shin">
+        <path d="${lowerSeg(D,3.5)}" fill="${legPale}"/>
+        <ellipse cx="0" cy="0" rx="${fore?5.6:5}" ry="${fore?6.6:5.6}" fill="${legPale}"/>
+        ${clovenHoof(D,dark)}
+      </g></g></g></g>`;
+  };
+  const ossicone=(bx,by,tx,ty)=>{
+    const tip=calf?`<circle cx="${tx}" cy="${ty}" r="4.4" fill="#1e140c"/>`:`<ellipse cx="${tx}" cy="${ty}" rx="3" ry="2.6" fill="#5a3b24"/>`;
+    return `<path d="M${bx-2.4},${by+.9} L${f1(tx-1.9)},${f1(ty+.7)} L${f1(tx+1.9)},${f1(ty-.7)} L${bx+2.4},${by-.9}Z" fill="${headC}"/>${tip}`;
+  };
+  const head=`
+    <path class="ear" d="M4,-11 C-3,-16 -11,-12 -15,-5 C-8,-4 -1,-5 4,-8Z" fill="#b98b58"/>
+    ${ossicone(8,-13,calf?3:1.9,calf?-26:-30.4)}${ossicone(14,-14.5,calf?9:7.9,calf?-27:-31.9)}
+    ${calf?'':`<ellipse cx="25" cy="-14.6" rx="4.6" ry="3" fill="${headC}"/>`}
+    <path class="jaw" d="M22,9 C30,12 42,12 51,8 C48,13 32,14 22,12Z" fill="#c39465"/>
+    <path d="${G_HEAD}" fill="${headC}"/>
+    <g clip-path="url(#gh-${id})">
+      <ellipse cx="7" cy="-3" rx="4.5" ry="3.6" fill="${spot[0]}" opacity=".8"/>
+      <ellipse cx="29" cy="-11" rx="3.4" ry="2.4" fill="${spot[1]}" opacity=".6"/>
+      <ellipse cx="47" cy="1" rx="10" ry="10" fill="#b4875a"/>
+      <path d="${G_HEAD}" fill="url(#gShade)"/>
+    </g>
+    <path class="ear" d="M6,-9 C0,-14 -9,-10 -14,-2 C-7,-1 0,-3 6,-5Z" fill="${headC}" stroke="#9a6b3e" stroke-width=".7"/>
+    <path d="M44,-3.5 q2.5,-1.6 5,.2" stroke="${dark}" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+    <path d="M33,9.5 Q44,9 53,5.5" stroke="#6b4426" stroke-width=".9" fill="none"/>
+    <g class="eye"><ellipse cx="19" cy="-6" rx="${calf?4.6:4.2}" ry="${calf?3.8:3.4}" fill="#1b0f08"/><circle cx="20.4" cy="-7.2" r="1.1" fill="#fff"/></g>
+    <path d="M14,-9.4 Q19,-12.6 24.5,-8.8 M15.5,-10.6 l-1.2,-2.2 M18.5,-11.5 l-.4,-2.4 M21.5,-11 l.6,-2.2" stroke="#1b0f08" stroke-width="1" fill="none" stroke-linecap="round"/>
+    <circle class="mouth" cx="53" cy="4" r=".5" fill="none"/>`;
+  // far side legs first (in shadow); giraffes walk with a lateral, almost pacing gait,
+  // so the hind and fore leg on one side move nearly together
+  s+=leg('hind',-46,-.5,true)+leg('fore',44,-.56,true);
+  s+=`<g transform="translate(0,${f1(dy)})">
+    <g class="tail"><path d="M-72,-176 C-78,-156 -82,-134 -82,-112" stroke="#8f4f20" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <path d="M-82,-116 C-89,-104 -90,-92 -83,-82 C-78,-92 -77,-104 -80,-116Z" fill="${dark}"/></g>
+    <g transform="translate(54,-192)"><g class="neck"><g transform="rotate(-60)">
+      <path d="${NECK}" fill="${line}"/>
+      <g clip-path="url(#gn-${id})">
+        ${patches(r,-12,len*.55,-30,30,calf?17:21,spot)}${patches(r,len*.55,len+10,-30,30,calf?14:16,spot)}
+        <path d="${NECK}" fill="url(#gThroat)"/>
+      </g>
+      <path d="M-4,-27.5 C${f1(len*.4)},-23.5 ${f1(len*.72)},-15 ${f1(len+2)},-12.5" stroke="#7a3f17" stroke-width="5" stroke-dasharray="2.2 1.4" stroke-linecap="round" fill="none"/>
+      <g transform="translate(${f1(len)},0) rotate(80) scale(${hs})"><g class="head">${head}</g></g>
+    </g></g></g>
+    <path d="${G_BODY}" fill="${line}"/>
+    <g clip-path="url(#gb-${id})">
+      ${patches(r,-82,80,-224,-116,calf?25:30,spot)}
+      <path d="${G_BODY}" fill="url(#gBelly)"/><path d="${G_BODY}" fill="url(#gShade)"/>
+    </g>
+  </g>`;
+  s+=leg('hind',-36,0,false)+leg('fore',54,-.06,false);
+  return s;
+}
+
+/* ===== Zebra (plains / Grant's). Ground at y=0, facing right, drawn at 1.3 m at the withers once scaled.
+   Upright striped mane, broad vertical barrel stripes that run down to the belly, stripes that bend
+   back into horizontal bands over the haunch, a dorsal stripe, banded legs to the hooves,
+   big rounded ears, black muzzle, and one solid hoof per foot. */
+const Z_BODY='M-72,-96 C-74,-114 -62,-125 -42,-124 C-18,-122 10,-128 30,-129 C47,-130 61,-116 61,-98 C61,-83 55,-71 41,-67 C16,-61 -14,-61 -40,-64 C-56,-67 -66,-75 -70,-84 C-72,-88 -72,-92 -72,-96Z';
+const Z_HEAD='M0,-10 C8,-14 20,-12 30,-9 C42,-7 52,-6 57,-3 C61,0 60,7 55,9 C48,11 42,10 36,10 C28,12 22,18 12,18 C3,18 -3,10 -2,2 C-2,-4 -2,-8 0,-10Z';
+
 function zebra(){
-  const k='#1f1d1b', w='#fbfaf6';
-  const leg=(x,ph)=>{let s=`<g class="leg ${ph}"><rect x="${x}" y="-74" width="9" height="74" rx="3" fill="${w}" stroke="${k}" stroke-width="1"/>`;
-    for(let y=-64;y<-10;y+=14)s+=`<rect x="${x}" y="${y}" width="9" height="5" fill="${k}"/>`;
-    return s+`<rect x="${x}" y="-7" width="9" height="7" rx="2" fill="${k}"/></g>`;};
-  let s=`<g class="tail"><path d="M-53,-98 Q-66,-74 -62,-50" stroke="${k}" stroke-width="3" fill="none"/><path d="M-67,-54 l4,14 l6,-13z" fill="${k}"/></g>`;
-  // zebras trot: diagonal pairs swing together
-  s+=leg(-40,'a')+leg(26,'b');
-  s+=`<polygon points="28,-104 62,-142 80,-130 50,-80" fill="${w}"/><ellipse cx="0" cy="-88" rx="55" ry="26" fill="${w}"/>`;
+  const k='#1d1a17', w='#f7f5ee', len=54;
+  const NECK=`M-8,-21 C${len*.4},-19 ${len*.75},-13 ${len+1},-11 C${len+8},-6 ${len+8},6 ${len+1},10 C${len*.7},13 ${len*.4},19 -8,22Z`;
+  const MANE=`M-6,-20 C18,-19 38,-15 ${len+2},-11 L${len+1},-19 C38,-24 18,-27 -4,-29Z`;
+  const FU=46, FD=42, HU=46, HD=39;
+  let s=`<defs>
+    <clipPath id="zb"><path d="${Z_BODY}"/></clipPath>
+    <clipPath id="zn"><path d="${NECK}"/><path d="${MANE}"/></clipPath>
+    <clipPath id="zh"><path d="${Z_HEAD}"/></clipPath>
+    <clipPath id="zfu"><path d="${foreUpper(FU,8)}"/></clipPath>
+    <clipPath id="zhu"><path d="${hindUpper(HU,9.5)}"/></clipPath>
+    <clipPath id="zfl"><path d="${lowerSeg(FD,3.1)}"/></clipPath>
+    <clipPath id="zhl"><path d="${lowerSeg(HD,3.1)}"/></clipPath></defs>`;
+  const bands=(y0,y1,step,h)=>{let b='';for(let y=y0;y<y1;y+=step)b+=`<rect x="-20" y="${f1(y)}" width="40" height="${h}" fill="${k}"/>`;return b;};
+  const leg=(type,cx,d,far)=>{
+    const fore=type==='fore', U=fore?FU:HU, D=fore?FD:HD;
+    const up=fore?foreUpper(FU,8):hindUpper(HU,9.5);
+    const joint=fore?'0,'+U:'-10.5,'+(U+3);
+    return `<g transform="translate(${cx},-88)"${far?' style="filter:brightness(.8)"':''}><g class="leg ${type}" style="--d:${d}">
+      <path d="${up}" fill="${w}"/><g clip-path="url(#z${fore?'f':'h'}u)">${bands(3,U+6,5.8,2.8)}</g>
+      <g transform="translate(${joint})"><g class="shin">
+        <path d="${lowerSeg(D,3.1)}" fill="${w}"/><g clip-path="url(#z${fore?'f':'h'}l)">${bands(2,D-7,4.6,2.2)}</g>
+        ${solidHoof(D,k)}
+      </g></g></g></g>`;
+  };
+  // haunch stripes: arcs that start upright at the flank and bend back to horizontal over the thigh
   let st='';
-  for(let x=-48;x<=44;x+=12)st+=`<path d="M${x},-118 q7,30 0,62" stroke="${k}" stroke-width="5.5" fill="none"/>`;
-  for(let i=0;i<5;i++){const y=-136+i*12;st+=`<path d="M${30+i*2},${y+20} L${84},${y-6}" stroke="${k}" stroke-width="5" fill="none"/>`;}
-  s+=`<g clip-path="url(#zclip)">${st}</g>`;
-  s+=`<ellipse cx="0" cy="-88" rx="55" ry="26" fill="none" stroke="${k}" stroke-width="1.5"/>`;
-  s+=`<path d="M28,-106 L64,-146" stroke="${k}" stroke-width="7" stroke-dasharray="3 2"/>`;
-  s+=leg(-26,'b')+leg(40,'a');
-  s+=`<g class="neck"><g class="head">
-    <ellipse class="ear" cx="68" cy="-136" rx="4.5" ry="11" transform="rotate(-30 68 -136)" fill="${w}" stroke="${k}" stroke-width="1.5"/>
-    <ellipse class="jaw" cx="93" cy="-71" rx="8" ry="4" fill="#3a3633"/>
-    <ellipse cx="84" cy="-102" rx="12" ry="30" transform="rotate(-25 84 -102)" fill="${w}" stroke="${k}" stroke-width="1.5"/>
-    <path d="M74,-118 l20,-6 M76,-106 l20,-6 M80,-94 l18,-5" stroke="${k}" stroke-width="3"/>
-    <ellipse cx="96" cy="-76" rx="9" ry="8" fill="${k}"/>
-    <g class="eye"><circle cx="80" cy="-114" r="3" fill="${k}"/><circle cx="81" cy="-115" r="1" fill="#fff"/></g>
-  </g></g>`;
+  for(let x=-18,i=0;x<=58;x+=9,i++)st+=`<path d="M${x},-134 C${x+3},-110 ${x-4},-86 ${x+2},-56" stroke="${k}" stroke-width="${i%2?5.2:4.2}" fill="none"/>`;
+  for(let i=0;i<7;i++){const rr=30+i*9.5;st+=`<path d="M${f1(-26-rr)},-50 A${rr},${rr} 0 0 1 -26,${f1(-50-rr)}" stroke="${k}" stroke-width="4.6" fill="none"/>`;}
+  st+=`<path d="M-68,-116 C-40,-124 -10,-122 10,-127 C20,-129 28,-130 36,-129" stroke="${k}" stroke-width="4.5" fill="none"/>`;
+  st+=`<path d="M-40,-63 C-14,-61 16,-61 41,-67" stroke="${k}" stroke-width="5" fill="none"/>`;
+  let ns='';for(let x=-6;x<=len+4;x+=7)ns+=`<rect x="${x}" y="-32" width="4.2" height="58" fill="${k}"/>`;
+  let hs='';for(let x=4;x<=44;x+=4)hs+=`<path d="M${x},-15 L${x+1.5},19" stroke="${k}" stroke-width="1.9"/>`;
+  const ear=(dx,dy,shade)=>`<g transform="translate(${dx},${dy})"><path class="ear" d="M3,-11 C-6,-20 -18,-26 -26,-25 C-24,-18 -12,-9 -1,-6Z" fill="${shade}" stroke="${k}" stroke-width="1"/>
+      <path d="M-18,-22 C-22,-24 -25,-25 -26,-25 C-25,-21 -23,-19 -20,-17Z" fill="${k}"/></g>`;
+  const head=`
+    ${ear(0,0,'#dedbd2')}
+    <path class="jaw" d="M40,9 C46,12 54,12 58,8 C56,14 46,15 40,12Z" fill="#2a2420"/>
+    <path d="${Z_HEAD}" fill="${w}"/>
+    <g clip-path="url(#zh)">${hs}<ellipse cx="53" cy="2" rx="9.5" ry="9" fill="#2a201b"/><path d="${Z_HEAD}" fill="url(#gShade)"/></g>
+    <path d="${Z_HEAD}" fill="none" stroke="${k}" stroke-width=".8" opacity=".6"/>
+    ${ear(3,1,w)}
+    <g class="eye"><ellipse cx="17" cy="-5" rx="3" ry="2.6" fill="${k}"/><circle cx="17.9" cy="-5.8" r=".9" fill="#fff"/></g>
+    <circle class="mouth" cx="59" cy="5" r=".5" fill="none"/>`;
+  // four-beat walk, as in all horses: left hind, left fore, right hind, right fore, a quarter-stride apart
+  s+=leg('hind',-50,-.5,true)+leg('fore',36,-.75,true);
+  s+=`<g class="tail"><path d="M-70,-114 C-77,-100 -79,-84 -77,-66" stroke="${w}" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+      <path d="M-70,-114 C-77,-100 -79,-84 -77,-66" stroke="${k}" stroke-width="3.4" stroke-dasharray="3 3" fill="none"/>
+      <path d="M-77,-70 C-82,-60 -82,-48 -77,-40 C-72,-48 -72,-60 -74,-70Z" fill="${k}"/></g>`;
+  s+=`<g transform="translate(42,-112)"><g class="neck"><g transform="rotate(-45)">
+      <path d="${MANE}" fill="${w}"/><path d="${NECK}" fill="${w}"/>
+      <g clip-path="url(#zn)">${ns}</g>
+      <path d="M-4,-29 C18,-27 38,-24 ${len+1},-19" stroke="${k}" stroke-width="2.4" stroke-dasharray="1.4 1.2" fill="none"/>
+      <g transform="translate(${len},0) rotate(105)"><g class="head">${head}</g></g>
+    </g></g></g>`;
+  s+=`<path d="${Z_BODY}" fill="${w}"/>
+    <g clip-path="url(#zb)">${st}<path d="${Z_BODY}" fill="url(#gShade)"/></g>
+    <path d="${Z_BODY}" fill="none" stroke="${k}" stroke-width=".9" opacity=".5"/>`;
+  s+=leg('hind',-40,0,false)+leg('fore',46,-.25,false);
   return s;
 }
 
 // build animals
 const animalsG=$('animals');
+const BUILD={big:{ls:1,ns:1,hs:1,calf:false},baby:{ls:1.12,ns:.8,hs:1.25,calf:true}};
 ORDER.forEach(key=>{
   const a=ANIMALS[key];
   const g=document.createElementNS(NS,'g');
   g.setAttribute('class','animal');g.setAttribute('tabindex','0');g.setAttribute('role','button');
   g.setAttribute('aria-label',a.name[0].toUpperCase()+a.name.slice(1));g.dataset.a=key;
-  g.innerHTML=`<g class="mover"><g class="shake"><g class="flip"><g transform="scale(${a.scale})">${key==='zebra'?zebra():giraffe()}</g></g></g></g>`;
+  const shadowRx={big:92,baby:58,zebra:50}[key];
+  g.innerHTML=`<g class="mover"><ellipse cx="6" cy="-1" rx="${shadowRx}" ry="6.5" fill="#5a3a12" opacity=".2"/><g class="shake"><g class="flip"><g transform="scale(${a.scale})">${key==='zebra'?zebra():giraffe(key,BUILD[key])}</g></g></g></g>`;
   animalsG.appendChild(g);
   a.el=g;a.mover=g.querySelector('.mover');a.shake=g.querySelector('.shake');
   place(a,a.home);
 });
 function place(a,x){a.x=x;a.mover.style.transform=`translate(${x}px,${a.base}px)`;}
+// Find where each mouth ends up once the animal stretches for food, so it stops with its lips at the leaves
+function measureMouths(){
+  ORDER.forEach(k=>{
+    const a=ANIMALS[k], mk=a.el.querySelector('.mouth');
+    a.reachX=null;
+    try{
+      a.el.classList.add('measure','reach');reflow(a.el);
+      const M=a.mover.getScreenCTM(), m=mk.getScreenCTM();
+      if(M&&m){const p=new DOMPoint(+mk.getAttribute('cx'),+mk.getAttribute('cy')).matrixTransform(M.inverse().multiply(m));a.reachX=p.x;}
+    }catch(e){}
+    a.el.classList.remove('reach');reflow(a.el);a.el.classList.remove('measure');
+  });
+}
 
-// build leaves
+// acacia thorns: the umbrella thorn carries pairs of pale spines along its branches
+(function(){
+  const segs=[[700,200,604,112],[702,190,800,104],[701,185,701,96],[703,310,620,250],[705,296,792,240],[700,420,696,330]];
+  let s='';
+  segs.forEach(([x1,y1,x2,y2])=>{const dx=x2-x1,dy=y2-y1,l=Math.hypot(dx,dy),ux=dx/l,uy=dy/l;
+    for(let t=.3;t<.95;t+=.3){const x=x1+dx*t,y=y1+dy*t;
+      s+=`<path d="M${f1(x)},${f1(y)} l${f1((ux*.6-uy)*4.5)},${f1((uy*.6+ux)*4.5)} M${f1(x)},${f1(y)} l${f1((ux*.6+uy)*4.5)},${f1((uy*.6-ux)*4.5)}" stroke="#efe6cf" stroke-width=".9" stroke-linecap="round" opacity=".85"/>`;}});
+  $('thorns').innerHTML=s;
+})();
+
+// build leaves: acacia sprays are feathery bipinnate fronds with a cream puffball flower;
+// the bush is a broad-leaved shrub with a few small orange berries
 const leavesG=$('leaves');
 SPOTS.forEach((sp,i)=>{
   const g=document.createElementNS(NS,'g');
   g.setAttribute('class','leaf');g.setAttribute('tabindex','0');g.setAttribute('role','button');
   g.setAttribute('transform',`translate(${sp.x} ${sp.y})`);g.dataset.i=i;
-  const light=sp.zone===0?['#86c13d','#a6d65a']:['#7fbf3a','#9bd14c'];
-  let s='<circle class="hit" r="32"/>';
-  for(let k=0;k<7;k++)s+=`<ellipse class="lf" cx="0" cy="-13" rx="7" ry="13" transform="rotate(${k*360/7})" fill="${light[k%2]}" stroke="#4f7d1d" stroke-width="1.2"/>`;
-  s+='<circle class="lf" r="5" fill="#6aa52e"/>';
+  let s='<circle class="hit" r="32"/>', color;
+  if(sp.zone>0){
+    color='#8cbf45';
+    for(let f=0;f<7;f++){
+      let fr=`<path d="M0,0 L0,-19" stroke="#55782a" stroke-width="1"/>`;
+      for(let j=1;j<=7;j++){const y=-j*2.5-.5, sz=1.9-j*.12;
+        fr+=`<ellipse cx="-2.8" cy="${f1(y)}" rx="${f1(sz+.6)}" ry="${f1(sz*.6)}" fill="${j%2?'#86bb41':'#9ccc55'}"/><ellipse cx="2.8" cy="${f1(y)}" rx="${f1(sz+.6)}" ry="${f1(sz*.6)}" fill="${j%2?'#7bb03a':'#93c64e'}"/>`;}
+      s+=`<g class="lf" transform="rotate(${f1(f*360/7+8)}) scale(1.3)">${fr}</g>`;
+    }
+    s+=`<g class="lf"><circle r="4.4" fill="#f6efcf" stroke="#e2d6a6" stroke-width="1" stroke-dasharray="1 1"/></g>`;
+  }else{
+    color='#7fb23e';
+    for(let f=0;f<7;f++){
+      s+=`<g class="lf" transform="rotate(${f1(f*360/7)})"><ellipse cx="0" cy="-12" rx="6.5" ry="12" fill="${f%2?'#78ad3a':'#8fc24c'}" stroke="#4d7a1f" stroke-width="1"/><path d="M0,-2 L0,-22" stroke="#4d7a1f" stroke-width=".8"/></g>`;
+    }
+    s+=`<g class="lf"><circle cx="-2.5" cy="1" r="2.6" fill="#e0782c"/><circle cx="2.6" cy="-1" r="2.6" fill="#ea8a35"/><circle cx="0" cy="3.4" r="2.4" fill="#d66d27"/></g>`;
+  }
   g.innerHTML=`<circle class="ring" r="31"/><g class="inner">${s}</g>`;
   leavesG.appendChild(g);
-  sp.el=g;sp.lfs=[...g.querySelectorAll('.lf')];sp.eaten=false;sp.claimed=false;sp.color=light[1];
+  sp.el=g;sp.lfs=[...g.querySelectorAll('.lf')];sp.eaten=false;sp.claimed=false;sp.color=color;
 });
 
 // state
@@ -511,7 +706,7 @@ async function feed(key,sp){
   say(`The ${a.name} heads for the ${ZONES[sp.zone]} leaves…`);
   if(level===1)setHungry(); // the next hungry animal is ready while this one eats
 
-  await walkTo(a,sp.x-a.mouthX*a.scale+4,g); if(g!==gen)return;
+  await walkTo(a,sp.x-(a.reachX!=null?a.reachX:a.mouthX*a.scale),g); if(g!==gen)return;
   el.classList.add('reach'); await wait(550); if(g!==gen)return;
 
   for(const piece of BITES){
@@ -519,7 +714,7 @@ async function feed(key,sp){
     await wait(230); if(g!==gen)return;
     piece.forEach(j=>sp.lfs[j].classList.add('gone'));
     sp.el.classList.remove('tug');reflow(sp.el);sp.el.classList.add('tug');
-    crumbs(sp,3);munch(a.pitch,1);
+    crumbs(sp,2);munch(a.pitch,1);
     await wait(420); if(g!==gen)return;
   }
   el.classList.remove('bite','reach');el.classList.add('chew');
@@ -561,7 +756,7 @@ function start(lv){
   if(soundOn)audio(); // browsers only allow sound after a click, so unlock it here
   level=lv;$('level').textContent=level;
   best=loadBest(level);$('best').textContent=best;
-  resetScene();
+  resetScene();measureMouths();
   score=0;lives=3;selA=null;selS=null;state='play';
   renderHud();renderSel();
   $('overlay').hidden=true;
