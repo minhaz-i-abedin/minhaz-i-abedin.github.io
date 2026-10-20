@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;-webkit-text-size-adjust:100%}img{max-width:100%}[hidden]{display:none!important}</style><title>Treetop Lunch</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700&display=swap">
+<style>
+/* Layout: title + scoreboard, one wide savanna scene (the game board), a status line and three animal buttons underneath. Single warm-daylight look on purpose. */
+:root{
+  --ink:#3b2412; --paper:#fbf1dc; --sand:#f1dfb8; --line:#e0c48d;
+  --leaf:#4f7d1d; --sun:#d9592a; --good:#3c7a1c; --bad:#b3311b;
+  --ff-d:'Baloo 2','Trebuchet MS',system-ui,sans-serif;
+  --ff-b:'Nunito','Segoe UI',system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:16px/1.5 var(--ff-b);
+  padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.app{max-width:1000px;margin:0 auto;display:grid;gap:14px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:10px 24px}
+h1{font:800 clamp(34px,6vw,54px)/.95 var(--ff-d);margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 span{color:var(--leaf)}
+.how{margin:6px 0 0;max-width:56ch;color:#6e5236}
+.hud{display:flex;flex-wrap:wrap;gap:8px}
+.stat{background:var(--sand);border:1px solid var(--line);border-radius:12px;padding:4px 14px 6px;min-width:84px}
+.stat small{display:block;font:700 11px var(--ff-b);letter-spacing:.12em;text-transform:uppercase;color:#7a5a38}
+.stat b{font:800 24px/1.1 var(--ff-d);font-variant-numeric:tabular-nums}
+button.stat{font:inherit;color:inherit;text-align:left;cursor:pointer}
+button.stat:hover{border-color:var(--sun)}
+button.stat:focus-visible{outline:3px solid #1d5fa8;outline-offset:2px}
+button.stat[aria-pressed=false] b{color:#a08868}
+.lives{display:flex;gap:5px;height:29px;align-items:center}
+.lives i{width:18px;height:18px;background:var(--good);border-radius:0 100% 0 100%;transition:opacity .3s,transform .3s}
+.lives i.lost{opacity:.18;transform:scale(.7)}
+.stage{position:relative;border-radius:20px;overflow:hidden;border:2px solid var(--line);background:#fbe3a8}
+svg{display:block;width:100%;height:auto;user-select:none;-webkit-tap-highlight-color:transparent}
+
+/* ---- animal rig ---- */
+.animal{cursor:pointer;outline:none;--step:.78s;--nod:-3deg;--reach:rotate(5deg);--bite:12deg}
+.animal[data-a=big]{--reach:scale(1.1) rotate(-1deg)}
+.animal[data-a=baby]{--step:.56s}
+.animal[data-a=zebra]{--step:.52s;--nod:7deg;--reach:rotate(-14deg);--bite:-12deg}
+.animal.busy{cursor:default}
+.mover{transition-property:transform;transition-timing-function:cubic-bezier(.4,.1,.5,1)}
+.flip{transition:transform .5s ease-in-out}
+.animal.turned .flip{transform:scaleX(-1)}
+.shake{transition:filter .2s}
+.animal:hover:not(.busy) .shake{filter:brightness(1.07)}
+.animal:focus-visible .shake{filter:drop-shadow(0 0 3px #1d5fa8) drop-shadow(0 0 3px #1d5fa8)}
+.animal.sel .shake{filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 9px #fff6c9)}
+.shake.no{animation:no .5s}
+.leg,.tail,.neck,.head,.jaw,.eye,.ear{transform-box:fill-box}
+.leg{transform-origin:50% 0}
+.tail{transform-origin:100% 0;animation:swish 2.4s ease-in-out infinite alternate}
+.neck{transform-origin:18% 95%;transition:transform .55s ease-in-out}
+.head{transform-origin:20% 79%}
+.animal[data-a=zebra] .neck,.animal[data-a=zebra] .head{transform-origin:17% 24%}
+.jaw{transform-origin:0% 50%}
+.eye{transform-origin:center;animation:blink 4.6s infinite}
+.ear{transform-origin:100% 50%;animation:flick 6s infinite}
+.animal[data-a=baby] .eye{animation-delay:-1.7s}.animal[data-a=zebra] .eye{animation-delay:-3.1s}
+.animal[data-a=baby] .tail{animation-delay:-.9s}.animal[data-a=zebra] .tail{animation-delay:-1.6s;animation-duration:1.7s}
+.walking .shake{animation:bob calc(var(--step) / 2) ease-in-out infinite alternate}
+.walking .leg.a{animation:stride var(--step) ease-in-out infinite}
+.walking .leg.b{animation:stride var(--step) ease-in-out infinite;animation-delay:calc(var(--step) / -2)}
+.walking .neck{animation:nod var(--step) ease-in-out infinite}
+.walking .tail{animation:swish calc(var(--step) * 1.5) ease-in-out infinite alternate}
+.reach .neck{transform:var(--reach)}
+.bite .head{animation:bite .62s ease-in-out}
+.bite .jaw,.chew .jaw{animation:jaw .24s ease-in-out infinite alternate}
+.chew .head{animation:munch .48s ease-in-out infinite alternate}
+@keyframes stride{0%,100%{transform:rotate(17deg)}50%{transform:rotate(-17deg)}}
+@keyframes bob{to{transform:translateY(-4px)}}
+@keyframes nod{50%{transform:rotate(var(--nod))}}
+@keyframes swish{from{transform:rotate(-10deg)}to{transform:rotate(14deg)}}
+@keyframes bite{35%{transform:rotate(var(--bite))}70%{transform:rotate(calc(var(--bite) * -.35))}}
+@keyframes jaw{to{transform:rotate(30deg)}}
+@keyframes munch{to{transform:translateY(1.5px) rotate(2deg)}}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+@keyframes flick{0%,88%,100%{transform:rotate(0)}91%{transform:rotate(-22deg)}94%{transform:rotate(6deg)}}
+@keyframes no{20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+
+/* ---- leaves ---- */
+.leaf{cursor:pointer;outline:none}
+.leaf .inner{transform-box:fill-box;transform-origin:center;transition:transform .35s cubic-bezier(.3,1.5,.5,1),opacity .3s}
+.leaf.eaten,.leaf.claimed{pointer-events:none}
+.leaf.eaten .inner{transform:scale(.15);opacity:0}
+.leaf:hover .inner{transform:scale(1.08)}
+.leaf.tug .inner{animation:tug .26s ease-out}
+@keyframes tug{40%{transform:rotate(-14deg) scale(.94) translateX(-3px)}}
+.lf{transition:opacity .15s}
+.lf.gone{opacity:0}
+.leaf .ring{opacity:0;fill:none;stroke:#fff;stroke-width:3;stroke-dasharray:7 5}
+.leaf.sel .ring,.leaf:focus-visible .ring{opacity:1;animation:spin 1.2s linear infinite}
+.leaf:focus-visible .ring{stroke:#1d5fa8}
+@keyframes spin{to{stroke-dashoffset:-24}}
+.hit{fill:transparent;pointer-events:all}
+.crumb{transform-box:fill-box;transform-origin:center}
+.ruler text{font:700 15px var(--ff-b);fill:#7a5a38}
+#bubble{transition:opacity .25s}
+#bubble text{font:800 19px var(--ff-d);fill:var(--sun)}
+.pop{font:800 30px var(--ff-d);fill:#fff;stroke:var(--good);stroke-width:5;paint-order:stroke;animation:rise 1s ease-out forwards}
+.pop.bad{stroke:var(--bad)}
+@keyframes rise{to{transform:translateY(-36px);opacity:0}}
+
+.overlay{position:absolute;inset:0;display:grid;place-items:center;background:rgba(59,36,18,.28);padding:12px}
+.overlay[hidden]{display:none}
+.card{background:var(--paper);border-radius:18px;padding:16px 22px 18px;text-align:center;max-width:430px;display:grid;gap:6px;box-shadow:0 14px 40px rgba(59,36,18,.3)}
+.card h2{font:800 30px/1 var(--ff-d);margin:0;text-wrap:balance}
+.card p{margin:0;color:#6e5236;font-size:15px}
+.big{font:800 46px/1 var(--ff-d);color:var(--leaf)}
+.btn{font:700 18px var(--ff-d);background:var(--sun);color:#fff;border:0;border-radius:999px;padding:8px 26px 6px;cursor:pointer;justify-self:center;margin-top:6px}
+.btn:hover{filter:brightness(1.08)}
+.levels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+.levels .btn{margin:0;justify-self:stretch}
+.btn.lv{display:grid;gap:3px;padding:10px 12px 9px;border-radius:14px}
+.btn.lv b{font:800 20px/1 var(--ff-d)}
+.btn.lv small{font:600 12px/1.3 var(--ff-b)}
+.btn.alt{background:var(--sand);color:var(--ink);box-shadow:inset 0 0 0 2px var(--line)}
+.pick[aria-pressed=true]:disabled{opacity:1}
+.btn:focus-visible,.pick:focus-visible{outline:3px solid #1d5fa8;outline-offset:2px}
+.status{margin:0;min-height:48px;font:600 17px/1.4 var(--ff-b);padding:10px 16px;border-radius:12px;background:var(--sand);border-left:6px solid var(--line)}
+.status.good{border-left-color:var(--good)}
+.status.bad{border-left-color:var(--bad)}
+.picker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pick{font:700 18px var(--ff-d);color:var(--ink);background:var(--paper);border:2px solid var(--line);border-radius:14px;padding:10px 8px 8px;cursor:pointer;min-width:0}
+.pick small{display:block;font:600 13px var(--ff-b);color:#7a5a38}
+.pick[aria-pressed=true]{border-color:var(--sun);background:#fff4dc;box-shadow:0 0 0 3px rgba(217,89,42,.2)}
+.pick:disabled{opacity:.55;cursor:default}
+.facts{margin:0;font-size:14px;color:#6e5236;max-width:75ch}
+@media (max-width:560px){
+  .card{padding:10px 14px 12px;gap:3px}.card h2{font-size:22px}.card p{font-size:13px}.big{font-size:32px}.btn{font-size:16px;padding:6px 20px 4px}
+  .btn.lv{padding:6px 8px 5px}.btn.lv b{font-size:16px}.btn.lv small{font-size:10.5px}.levels{margin-top:4px}
+  .pick{font-size:15px}.pick small{font-size:11px}.stat{min-width:0;padding:3px 10px 4px}.stat b{font-size:20px}
+}
+@media (prefers-reduced-motion:reduce){
+  .mover,.flip,.neck{transition-duration:.01s!important}
+  .tail,.eye,.ear,.walking .shake,.walking .leg.a,.walking .leg.b,.walking .neck,.bite .head,.bite .jaw,.chew .jaw,.chew .head,.shake.no,.leaf.sel .ring,.leaf.tug .inner{animation:none!important}
+}
+</style>
+</head>
+<body>
+
+
+<main class="app">
+  <header>
+    <div>
+      <h1>Treetop <span>Lunch</span></h1>
+      <p class="how">Treetop, middle branch, or bush: each animal has its own height. <b>Level 1:</b> the hungry animal is picked for you, so just tap the leaves it can reach. <b>Level 2:</b> pick the animal and the leaves yourself, and feed the one shouting “Hungry!” for double points.</p>
+    </div>
+    <div class="hud" aria-label="Scoreboard">
+      <div class="stat"><small>Level</small><b id="level">1</b></div>
+      <div class="stat"><small>Score</small><b id="score">0</b></div>
+      <div class="stat"><small>Time</small><b id="time">1:00</b></div>
+      <div class="stat"><small>Lives</small><div class="lives" id="lives"><i></i><i></i><i></i></div></div>
+      <div class="stat"><small>Best</small><b id="best">0</b></div>
+      <button class="stat sound" id="soundBtn" type="button" aria-pressed="true" aria-label="Sound"><small>Sound</small><b>On</b></button>
+    </div>
+  </header>
+
+  <div class="stage">
+    <svg id="scene" viewBox="0 0 900 500" role="group" aria-label="Savanna with an acacia tree, a big giraffe, a baby giraffe and a zebra">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#f6c66e"/><stop offset=".75" stop-color="#fde7bd"/>
+        </linearGradient>
+        <clipPath id="zclip">
+          <ellipse cx="0" cy="-88" rx="55" ry="26"/>
+          <polygon points="28,-104 62,-142 80,-130 50,-80"/>
+        </clipPath>
+      </defs>
+      <rect width="900" height="500" fill="url(#sky)"/>
+      <circle cx="430" cy="78" r="44" fill="#fff5d6" opacity=".9"/>
+      <path d="M0,400 C120,360 220,380 330,368 C450,355 520,385 640,372 C760,360 840,380 900,370 L900,500 L0,500Z" fill="#e7bd74"/>
+      <path d="M0,440 C150,425 300,445 450,432 C600,420 750,440 900,428 L900,500 L0,500Z" fill="#d9a253"/>
+      <g stroke="#b98432" stroke-width="3" stroke-linecap="round" fill="none">
+        <path d="M60,470 l-5,-14 M66,470 l2,-16 M72,470 l7,-12"/>
+        <path d="M330,488 l-5,-14 M336,488 l2,-16 M342,488 l7,-12"/>
+        <path d="M520,478 l-5,-14 M526,478 l2,-16 M532,478 l7,-12"/>
+        <path d="M800,486 l-5,-14 M806,486 l2,-16 M812,486 l7,-12"/>
+      </g>
+      <g class="ruler" aria-hidden="true">
+        <line x1="878" y1="460" x2="878" y2="72" stroke="#a9834f" stroke-width="2"/>
+        <g id="ticks"></g>
+      </g>
+      <!-- acacia -->
+      <g stroke="#6b4426" stroke-linecap="round" fill="none">
+        <path d="M700,200 L604,112" stroke-width="10"/>
+        <path d="M702,190 L800,104" stroke-width="10"/>
+        <path d="M701,185 L701,96" stroke-width="9"/>
+        <path d="M703,310 L620,250" stroke-width="9"/>
+        <path d="M705,296 L792,240" stroke-width="9"/>
+      </g>
+      <polygon points="688,478 714,478 707,300 703,180 697,180 693,300" fill="#6b4426"/>
+      <g fill="#4e6b25">
+        <ellipse cx="600" cy="104" rx="82" ry="27"/>
+        <ellipse cx="700" cy="88" rx="96" ry="31"/>
+        <ellipse cx="804" cy="104" rx="74" ry="25"/>
+        <ellipse cx="612" cy="252" rx="34" ry="13"/>
+        <ellipse cx="796" cy="244" rx="34" ry="13"/>
+      </g>
+      <g fill="#476323">
+        <ellipse cx="640" cy="440" rx="104" ry="40"/>
+        <ellipse cx="575" cy="452" rx="58" ry="28"/>
+        <ellipse cx="720" cy="452" rx="56" ry="26"/>
+      </g>
+      <g id="leaves"></g>
+      <g id="animals"></g>
+      <g id="bubble" opacity="0" aria-hidden="true">
+        <rect x="0" y="0" width="92" height="32" rx="16" fill="#fff"/>
+        <path d="M38,31 L46,42 L54,31Z" fill="#fff"/>
+        <text x="46" y="23" text-anchor="middle">Hungry!</text>
+      </g>
+      <g id="pops"></g>
+    </svg>
+    <div class="overlay" id="overlay">
+      <div class="card" id="card">
+        <h2>Lunch on the savanna</h2>
+        <p>60 seconds. Three mix-ups and the animals wander off.</p>
+        <div class="levels">
+          <button class="btn lv" id="lv1Btn" type="button"><b>Level 1</b><small>We pick the hungry animal. You pick its leaves.</small></button>
+          <button class="btn lv" id="lv2Btn" type="button"><b>Level 2</b><small>You pick the animal and the leaves.</small></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="status" id="status" aria-live="polite">Tap an animal, then tap the leaves it can reach.</p>
+
+  <div class="picker" role="group" aria-label="Choose an animal">
+    <button class="pick" type="button" id="pick-big" data-a="big" aria-pressed="false">Big giraffe<small>about 5.5 m tall</small></button>
+    <button class="pick" type="button" id="pick-baby" data-a="baby" aria-pressed="false">Baby giraffe<small>about 3 m tall</small></button>
+    <button class="pick" type="button" id="pick-zebra" data-a="zebra" aria-pressed="false">Zebra<small>about 1.4 m at the shoulder</small></button>
+  </div>
+  <p class="facts">The ruler on the right shows height in metres. Adult giraffes browse acacia leaves up to about 5.5 m off the ground, young giraffes take the lower branches, and zebras eat close to the ground.</p>
+</main>
+
+<script>
+(function(){
+const NS='http://www.w3.org/2000/svg';
+const $=id=>document.getElementById(id);
+const ZONES=['bush','middle-branch','treetop'];
+const ANIMALS={
+  big:{name:'big giraffe',level:2,home:70,base:460,scale:1,mouthX:136,speed:210,pitch:.8,bubble:[200,24]},
+  baby:{name:'baby giraffe',level:1,home:230,base:460,scale:.6,mouthX:128,speed:190,pitch:1.3,bubble:[292,182]},
+  zebra:{name:'zebra',level:0,home:400,base:470,scale:1,mouthX:98,speed:180,pitch:1.05,bubble:[468,288]}
+};
+const ORDER=['big','baby','zebra'];
+const SPOTS=[
+  {zone:2,x:585,y:84},{zone:2,x:700,y:64},{zone:2,x:812,y:86},
+  {zone:1,x:612,y:244},{zone:1,x:796,y:236},
+  {zone:0,x:592,y:412},{zone:0,x:652,y:398},{zone:0,x:714,y:414}
+];
+const BITES=[[0,3],[1,5,6],[2,4,7]]; // which leaf pieces each bite removes
+const GAME_MS=60000, REGROW_MS=3200;
+
+// ruler: ground 460 = 0 m, 104 = 5.5 m
+const PX_M=(460-104)/5.5;
+let t='';
+for(let m=0;m<=6;m++){const y=460-m*PX_M;t+=`<line x1="870" x2="886" y1="${y}" y2="${y}" stroke="#a9834f" stroke-width="2"/><text x="866" y="${y+5}" text-anchor="end">${m} m</text>`;}
+$('ticks').innerHTML=t;
+
+function giraffe(){
+  const coat='#e9ab4a', far='#d39339', spot='#94531f', dark='#4a2c14';
+  const leg=(x,c,ph)=>`<g class="leg ${ph}"><rect x="${x}" y="-142" width="10" height="142" rx="4" fill="${c}"/><rect x="${x}" y="-8" width="10" height="8" rx="2" fill="${dark}"/></g>`;
+  let s=`<g class="tail"><path d="M-68,-162 Q-82,-132 -78,-100" stroke="${spot}" stroke-width="3" fill="none"/><path d="M-83,-104 l5,16 l6,-15z" fill="${dark}"/></g>`;
+  // giraffes pace: both legs on one side swing together
+  s+=leg(-56,far,'a')+leg(30,far,'a');
+  s+=`<g class="neck">
+    <path d="M26,-176 L82,-350 L106,-344 L64,-148Z" fill="${coat}"/>
+    <path d="M28,-180 L84,-354" stroke="${spot}" stroke-width="5" stroke-dasharray="3 3"/>`;
+  [[52,-218,7,9],[62,-256,6,8],[73,-294,6,8],[82,-326,5,6]].forEach(([x,y,rx,ry])=>{s+=`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${spot}"/>`;});
+  s+=`<g class="head">
+      <ellipse class="ear" cx="84" cy="-366" rx="11" ry="4.5" transform="rotate(-25 84 -366)" fill="${far}"/>
+      <rect x="90" y="-392" width="4" height="22" fill="${spot}"/><circle cx="92" cy="-392" r="4" fill="${dark}"/>
+      <rect x="100" y="-390" width="4" height="20" fill="${spot}"/><circle cx="102" cy="-390" r="4" fill="${dark}"/>
+      <ellipse class="jaw" cx="117" cy="-345" rx="11" ry="4.5" fill="#b77a30"/>
+      <ellipse cx="104" cy="-358" rx="25" ry="13" transform="rotate(12 104 -358)" fill="${coat}"/>
+      <ellipse cx="124" cy="-351" rx="10" ry="9" fill="#cf9443"/>
+      <circle cx="128" cy="-354" r="1.8" fill="${dark}"/>
+      <g class="eye"><circle cx="100" cy="-364" r="3.2" fill="${dark}"/><circle cx="101" cy="-365" r="1" fill="#fff"/></g>
+    </g>
+  </g>`;
+  s+=`<ellipse cx="-5" cy="-158" rx="70" ry="36" fill="${coat}"/>`;
+  [[-42,-165,14,10],[-12,-174,12,9],[18,-160,13,10],[-26,-142,11,8],[4,-145,10,7],[-58,-150,8,8],[44,-182,8,7]]
+    .forEach(([x,y,rx,ry])=>{s+=`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${spot}"/>`;});
+  s+=leg(-40,coat,'b')+leg(46,coat,'b');
+  return s;
+}
+function zebra(){
+  const k='#1f1d1b', w='#fbfaf6';
+  const leg=(x,ph)=>{let s=`<g class="leg ${ph}"><rect x="${x}" y="-74" width="9" height="74" rx="3" fill="${w}" stroke="${k}" stroke-width="1"/>`;
+    for(let y=-64;y<-10;y+=14)s+=`<rect x="${x}" y="${y}" width="9" height="5" fill="${k}"/>`;
+    return s+`<rect x="${x}" y="-7" width="9" height="7" rx="2" fill="${k}"/></g>`;};
+  let s=`<g class="tail"><path d="M-53,-98 Q-66,-74 -62,-50" stroke="${k}" stroke-width="3" fill="none"/><path d="M-67,-54 l4,14 l6,-13z" fill="${k}"/></g>`;
+  // zebras trot: diagonal pairs swing together
+  s+=leg(-40,'a')+leg(26,'b');
+  s+=`<polygon points="28,-104 62,-142 80,-130 50,-80" fill="${w}"/><ellipse cx="0" cy="-88" rx="55" ry="26" fill="${w}"/>`;
+  let st='';
+  for(let x=-48;x<=44;x+=12)st+=`<path d="M${x},-118 q7,30 0,62" stroke="${k}" stroke-width="5.5" fill="none"/>`;
+  for(let i=0;i<5;i++){const y=-136+i*12;st+=`<path d="M${30+i*2},${y+20} L${84},${y-6}" stroke="${k}" stroke-width="5" fill="none"/>`;}
+  s+=`<g clip-path="url(#zclip)">${st}</g>`;
+  s+=`<ellipse cx="0" cy="-88" rx="55" ry="26" fill="none" stroke="${k}" stroke-width="1.5"/>`;
+  s+=`<path d="M28,-106 L64,-146" stroke="${k}" stroke-width="7" stroke-dasharray="3 2"/>`;
+  s+=leg(-26,'b')+leg(40,'a');
+  s+=`<g class="neck"><g class="head">
+    <ellipse class="ear" cx="68" cy="-136" rx="4.5" ry="11" transform="rotate(-30 68 -136)" fill="${w}" stroke="${k}" stroke-width="1.5"/>
+    <ellipse class="jaw" cx="93" cy="-71" rx="8" ry="4" fill="#3a3633"/>
+    <ellipse cx="84" cy="-102" rx="12" ry="30" transform="rotate(-25 84 -102)" fill="${w}" stroke="${k}" stroke-width="1.5"/>
+    <path d="M74,-118 l20,-6 M76,-106 l20,-6 M80,-94 l18,-5" stroke="${k}" stroke-width="3"/>
+    <ellipse cx="96" cy="-76" rx="9" ry="8" fill="${k}"/>
+    <g class="eye"><circle cx="80" cy="-114" r="3" fill="${k}"/><circle cx="81" cy="-115" r="1" fill="#fff"/></g>
+  </g></g>`;
+  return s;
+}
+
+// build animals
+const animalsG=$('animals');
+ORDER.forEach(key=>{
+  const a=ANIMALS[key];
+  const g=document.createElementNS(NS,'g');
+  g.setAttribute('class','animal');g.setAttribute('tabindex','0');g.setAttribute('role','button');
+  g.setAttribute('aria-label',a.name[0].toUpperCase()+a.name.slice(1));g.dataset.a=key;
+  g.innerHTML=`<g class="mover"><g class="shake"><g class="flip"><g transform="scale(${a.scale})">${key==='zebra'?zebra():giraffe()}</g></g></g></g>`;
+  animalsG.appendChild(g);
+  a.el=g;a.mover=g.querySelector('.mover');a.shake=g.querySelector('.shake');
+  place(a,a.home);
+});
+function place(a,x){a.x=x;a.mover.style.transform=`translate(${x}px,${a.base}px)`;}
+
+// build leaves
+const leavesG=$('leaves');
+SPOTS.forEach((sp,i)=>{
+  const g=document.createElementNS(NS,'g');
+  g.setAttribute('class','leaf');g.setAttribute('tabindex','0');g.setAttribute('role','button');
+  g.setAttribute('transform',`translate(${sp.x} ${sp.y})`);g.dataset.i=i;
+  const light=sp.zone===0?['#86c13d','#a6d65a']:['#7fbf3a','#9bd14c'];
+  let s='<circle class="hit" r="32"/>';
+  for(let k=0;k<7;k++)s+=`<ellipse class="lf" cx="0" cy="-13" rx="7" ry="13" transform="rotate(${k*360/7})" fill="${light[k%2]}" stroke="#4f7d1d" stroke-width="1.2"/>`;
+  s+='<circle class="lf" r="5" fill="#6aa52e"/>';
+  g.innerHTML=`<circle class="ring" r="31"/><g class="inner">${s}</g>`;
+  leavesG.appendChild(g);
+  sp.el=g;sp.lfs=[...g.querySelectorAll('.lf')];sp.eaten=false;sp.claimed=false;sp.color=light[1];
+});
+
+// state
+let state='ready', score=0, lives=3, best=0, endAt=0, timer=null, gen=0;
+let selA=null, selS=null, hungry=null, level=1;
+function loadBest(lv){
+  let v=0;
+  try{v=+localStorage.getItem('treetop-lunch-best-'+lv)||(lv===2?+localStorage.getItem('treetop-lunch-best')||0:0);}catch(e){}
+  return v;
+}
+best=loadBest(level);
+$('best').textContent=best;
+
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const reflow=el=>void el.getBoundingClientRect();
+function say(msg,kind){const s=$('status');s.textContent=msg;s.className='status'+(kind?' '+kind:'');}
+function cap(s){return s[0].toUpperCase()+s.slice(1);}
+function labelSpot(sp){sp.el.setAttribute('aria-label',`${cap(ZONES[sp.zone])} leaves${sp.eaten?' (eaten)':''}`);}
+SPOTS.forEach(labelSpot);
+
+function renderSel(){
+  ORDER.forEach(k=>{const a=ANIMALS[k];
+    a.el.classList.toggle('sel',selA===k);a.el.classList.toggle('busy',!!a.busy);
+    $('pick-'+k).setAttribute('aria-pressed',selA===k);$('pick-'+k).disabled=level===1||!!a.busy;});
+  SPOTS.forEach((sp,i)=>{sp.el.classList.toggle('sel',selS===i);sp.el.classList.toggle('claimed',sp.claimed);});
+}
+function renderHud(){
+  $('score').textContent=score;
+  [...$('lives').children].forEach((el,i)=>el.classList.toggle('lost',i>=lives));
+}
+function setHungry(){
+  // level 1 only picks animals standing at home, because that animal is selected for the player
+  const opts=ORDER.filter(k=>k!==hungry&&(level===2||!ANIMALS[k].busy));
+  hungry=opts.length?opts[Math.floor(Math.random()*opts.length)]:null;
+  if(level===1){
+    selA=hungry;renderSel();
+    if(state==='play')say(hungry?`The ${ANIMALS[hungry].name} is hungry. Tap the leaves it can reach.`:'Everyone is eating. Wait for an animal to come back.');
+  }
+  showBubble();
+}
+function showBubble(){
+  const b=$('bubble');
+  if(!hungry||state!=='play'||ANIMALS[hungry].busy){b.setAttribute('opacity','0');return;}
+  const [cx,y]=ANIMALS[hungry].bubble;
+  b.setAttribute('transform',`translate(${cx-46} ${y})`);b.setAttribute('opacity','1');
+}
+function pop(x,y,text,bad){
+  const el=document.createElementNS(NS,'text');
+  el.setAttribute('x',x);el.setAttribute('y',y);el.setAttribute('text-anchor','middle');
+  el.setAttribute('class','pop'+(bad?' bad':''));el.textContent=text;
+  $('pops').appendChild(el);setTimeout(()=>el.remove(),1000);
+}
+// little leaf bits that flutter down from each bite
+function crumbs(sp,n){
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  for(let i=0;i<n;i++){
+    const c=document.createElementNS(NS,'ellipse');
+    c.setAttribute('class','crumb');c.setAttribute('rx',3.5);c.setAttribute('ry',6.5);
+    c.setAttribute('cx',sp.x+(Math.random()*24-12));c.setAttribute('cy',sp.y+(Math.random()*16-8));
+    c.setAttribute('fill',sp.color);c.setAttribute('stroke','#4f7d1d');
+    $('pops').appendChild(c);
+    if(reduce||!c.animate){setTimeout(()=>c.remove(),300);continue;}
+    const dx=Math.random()*70-35, dy=50+Math.random()*60, rot=(Math.random()<.5?-1:1)*(180+Math.random()*240);
+    c.animate([{transform:'translate(0,0) rotate(0)',opacity:1},
+               {transform:`translate(${dx*.6}px,${dy*.4}px) rotate(${rot*.4}deg)`,opacity:1,offset:.4},
+               {transform:`translate(${dx}px,${dy}px) rotate(${rot}deg)`,opacity:0}],
+      {duration:900+Math.random()*300,easing:'ease-in'}).onfinish=()=>c.remove();
+  }
+}
+
+// ---- sound: munches are synthesized, so nothing loads from outside ----
+let actx=null, noise=null, soundOn=true;
+function audio(){
+  if(!actx){
+    try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return null;}
+    const len=actx.sampleRate;noise=actx.createBuffer(1,len,len);
+    const d=noise.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+  }
+  if(actx.state==='suspended')actx.resume();
+  return actx;
+}
+// one "munch": a few crackly noise grains (leaves tearing) over a soft low thump (the jaw)
+function munch(pitch,vol){
+  if(!soundOn)return;
+  const c=audio();if(!c)return;
+  const t=c.currentTime+.01;
+  const out=c.createGain();out.gain.value=.9*vol;out.connect(c.destination);
+  const bp=c.createBiquadFilter();bp.type='bandpass';bp.Q.value=1.1;
+  bp.frequency.value=1500*pitch*(.85+Math.random()*.3);bp.connect(out);
+  const grains=3+Math.floor(Math.random()*2);
+  for(let k=0;k<grains;k++){
+    const at=t+k*.038+Math.random()*.012, peak=.55*(1-k*.17);
+    const src=c.createBufferSource();src.buffer=noise;
+    const g=c.createGain();
+    g.gain.setValueAtTime(.0001,at);g.gain.exponentialRampToValueAtTime(peak,at+.006);
+    g.gain.exponentialRampToValueAtTime(.0001,at+.055);
+    src.connect(g);g.connect(bp);src.start(at,Math.random()*.8,.07);
+  }
+  const o=c.createOscillator(), og=c.createGain();
+  o.type='sine';o.frequency.setValueAtTime(150*pitch,t);o.frequency.exponentialRampToValueAtTime(65*pitch,t+.12);
+  og.gain.setValueAtTime(.0001,t);og.gain.exponentialRampToValueAtTime(.4,t+.01);og.gain.exponentialRampToValueAtTime(.0001,t+.14);
+  o.connect(og);og.connect(out);o.start(t);o.stop(t+.16);
+}
+function renderSound(){
+  const b=$('soundBtn');b.setAttribute('aria-pressed',soundOn);b.querySelector('b').textContent=soundOn?'On':'Off';
+}
+try{soundOn=localStorage.getItem('treetop-lunch-sound')!=='off';}catch(e){}
+renderSound();
+$('soundBtn').addEventListener('click',()=>{
+  soundOn=!soundOn;renderSound();
+  try{localStorage.setItem('treetop-lunch-sound',soundOn?'on':'off');}catch(e){}
+  if(soundOn)munch(1,.6);
+});
+
+async function walkTo(a,x,g){
+  const ms=Math.max(650,Math.abs(x-a.x)/a.speed*1000);
+  a.mover.style.transitionDuration=ms+'ms';
+  a.el.classList.add('walking');place(a,x);
+  await wait(ms);
+  if(g===gen)a.el.classList.remove('walking');
+}
+
+function chooseAnimal(k){
+  if(state!=='play')return;
+  const a=ANIMALS[k];
+  if(level===1){
+    say(hungry?`In level 1 the hungry animal is picked for you. Tap the leaves the ${ANIMALS[hungry].name} can reach.`:'Everyone is eating. Wait for an animal to come back.');
+    return;
+  }
+  if(a.busy){say(`The ${a.name} is still busy. Pick another animal.`);return;}
+  selA=selA===k?null:k;renderSel();
+  if(selA&&selS!==null)return attempt();
+  if(selA)say(`${cap(a.name)} is ready. Which leaves can it reach?`);
+  else say('Tap an animal, then tap the leaves it can reach.');
+}
+function chooseSpot(i){
+  const sp=SPOTS[i];
+  if(state!=='play'||sp.eaten||sp.claimed)return;
+  if(level===1&&!selA){say('Everyone is eating. Wait for an animal to come back.');return;}
+  selS=selS===i?null:i;renderSel();
+  if(selA&&selS!==null)return attempt();
+  if(selS!==null)say(`${cap(ZONES[sp.zone])} leaves picked. Who can reach them?`);
+}
+
+function attempt(){
+  const key=selA,a=ANIMALS[key],sp=SPOTS[selS];
+  selA=null;selS=null;
+  if(a.level===sp.zone){feed(key,sp);return;}
+  if(level===1)selA=key; // the hungry animal stays selected after a wrong leaf
+  renderSel();
+  const right=ANIMALS[ORDER.find(k=>ANIMALS[k].level===sp.zone)].name;
+  const zone=ZONES[sp.zone];
+  say(a.level<sp.zone
+    ?`The ${a.name} can't reach the ${zone} leaves. Those are for the ${right}.`
+    :`The ${a.name} would have to stoop for the ${zone} leaves. Those are for the ${right}.`,'bad');
+  lives--;renderHud();
+  a.shake.classList.remove('no');reflow(a.shake);a.shake.classList.add('no');
+  pop(sp.x,sp.y-20,'×',true);
+  setTimeout(()=>a.shake.classList.remove('no'),550);
+  if(lives<=0)setTimeout(()=>end('mixups'),550);
+}
+
+async function feed(key,sp){
+  const a=ANIMALS[key], g=gen, el=a.el;
+  a.busy=true;sp.claimed=true;renderSel();showBubble();
+  say(`The ${a.name} heads for the ${ZONES[sp.zone]} leaves…`);
+  if(level===1)setHungry(); // the next hungry animal is ready while this one eats
+
+  await walkTo(a,sp.x-a.mouthX*a.scale+4,g); if(g!==gen)return;
+  el.classList.add('reach'); await wait(550); if(g!==gen)return;
+
+  for(const piece of BITES){
+    el.classList.remove('bite');reflow(el);el.classList.add('bite');
+    await wait(230); if(g!==gen)return;
+    piece.forEach(j=>sp.lfs[j].classList.add('gone'));
+    sp.el.classList.remove('tug');reflow(sp.el);sp.el.classList.add('tug');
+    crumbs(sp,3);munch(a.pitch,1);
+    await wait(420); if(g!==gen)return;
+  }
+  el.classList.remove('bite','reach');el.classList.add('chew');
+  [480,960,1440].forEach(ms=>setTimeout(()=>{if(g===gen)munch(a.pitch,.55);},ms));
+  sp.eaten=true;sp.claimed=false;sp.el.classList.add('eaten');sp.el.classList.remove('tug');labelSpot(sp);renderSel();
+  if(state==='play'){
+    const pts=level===1?1:(key===hungry?2:1);
+    score+=pts;renderHud();pop(sp.x,sp.y-20,'+'+pts);
+    if(level===1)say(`Crunch! The ${a.name} reaches the ${ZONES[sp.zone]} leaves. +1.${hungry?` Now the ${ANIMALS[hungry].name} is hungry.`:''}`,'good');
+    else say(`Crunch! The ${a.name} reaches the ${ZONES[sp.zone]} leaves. +${pts}${pts===2?' for feeding the hungry one':''}.`,'good');
+    if(level===2&&pts===2)setHungry();
+  }
+  setTimeout(()=>{if(g===gen&&state==='play'){sp.eaten=false;sp.lfs.forEach(l=>l.classList.remove('gone'));sp.el.classList.remove('eaten');labelSpot(sp);}},REGROW_MS);
+
+  await wait(500); if(g!==gen)return;
+  el.classList.add('turned'); await wait(520); if(g!==gen)return;
+  await walkTo(a,a.home,g); if(g!==gen)return;
+  el.classList.remove('turned'); await wait(520); if(g!==gen)return;
+  el.classList.remove('chew');
+  a.busy=false;renderSel();
+  if(level===1&&!hungry&&state==='play')setHungry();else showBubble();
+}
+
+function tick(){
+  const left=Math.max(0,endAt-performance.now());
+  const s=Math.ceil(left/1000);
+  $('time').textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  if(left<=0)end('time');
+}
+function resetScene(){
+  gen++;
+  ORDER.forEach(k=>{const a=ANIMALS[k];
+    a.busy=false;a.el.classList.remove('walking','reach','bite','chew','turned','sel','busy');a.shake.classList.remove('no');
+    a.mover.style.transitionDuration='0ms';place(a,a.home);});
+  SPOTS.forEach(sp=>{sp.eaten=false;sp.claimed=false;sp.lfs.forEach(l=>l.classList.remove('gone'));
+    sp.el.classList.remove('eaten','tug','claimed');labelSpot(sp);});
+}
+function start(lv){
+  if(soundOn)audio(); // browsers only allow sound after a click, so unlock it here
+  level=lv;$('level').textContent=level;
+  best=loadBest(level);$('best').textContent=best;
+  resetScene();
+  score=0;lives=3;selA=null;selS=null;state='play';
+  renderHud();renderSel();
+  $('overlay').hidden=true;
+  endAt=performance.now()+GAME_MS;clearInterval(timer);timer=setInterval(tick,200);tick();
+  hungry=null;setHungry();
+  if(level===2)say('Tap an animal, then tap the leaves it can reach.');
+}
+function end(why){
+  if(state!=='play')return;
+  state='over';clearInterval(timer);showBubble();selA=null;selS=null;renderSel();
+  const isBest=score>best;
+  if(isBest){best=score;$('best').textContent=best;try{localStorage.setItem('treetop-lunch-best-'+level,best);}catch(e){}}
+  const other=level===1?2:1;
+  $('card').innerHTML=`<h2>${why==='time'?"Time's up!":'Three mix-ups'}</h2>
+    <div class="big">${score}</div>
+    <p>Level ${level} · ${isBest&&score>0?'a new best score!':`best so far: ${best}`}</p>
+    <p>Treetop for the big giraffe, middle branches for the baby, bush for the zebra.</p>
+    <div class="levels">
+      <button class="btn" id="againBtn" type="button">Play level ${level} again</button>
+      <button class="btn alt" id="otherBtn" type="button">Try level ${other}</button>
+    </div>`;
+  $('overlay').hidden=false;
+  $('againBtn').addEventListener('click',()=>start(level));
+  $('otherBtn').addEventListener('click',()=>start(other));
+  $('againBtn').focus();
+  say(why==='time'?`Time's up. You scored ${score}.`:`Game over after three mix-ups. You scored ${score}.`);
+}
+
+// input
+function activate(el,fn){
+  el.addEventListener('click',fn);
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fn();}});
+}
+ORDER.forEach(k=>{activate(ANIMALS[k].el,()=>chooseAnimal(k));$('pick-'+k).addEventListener('click',()=>chooseAnimal(k));});
+SPOTS.forEach((sp,i)=>activate(sp.el,()=>chooseSpot(i)));
+// On a phone the scene is small, so a tap that lands near a leaf bunch (not on it) still picks the closest one
+const scene=$('scene');
+scene.addEventListener('click',e=>{
+  if(state!=='play'||e.target.closest('.leaf'))return;
+  if(e.target.closest('.animal')&&level===2)return;
+  const m=scene.getScreenCTM();if(!m)return;
+  const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(m.inverse());
+  let bestI=-1,bestD=62;
+  SPOTS.forEach((sp,i)=>{if(sp.eaten||sp.claimed)return;const d=Math.hypot(sp.x-p.x,sp.y-p.y);if(d<bestD){bestD=d;bestI=i;}});
+  if(bestI>=0)chooseSpot(bestI);
+});
+$('lv1Btn').addEventListener('click',()=>start(1));
+$('lv2Btn').addEventListener('click',()=>start(2));
+})();
+</script>
+
+</body>
+</html>
